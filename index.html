@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPARC Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+        }
+
+        .left-side,
+        .right-side {
+            width: 50%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .bottom-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        .simulate-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .simulate-container>* {
+            margin: 0 10px;
+        }
+
+        .address-input,
+        .pc-input {
+            width: 150px;
+        }
+
+        .highlight {
+            background-color: yellow;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="left-side">
+            <textarea id="assembler" placeholder="Assembler Instructions"></textarea>
+        </div>
+        <div class="right-side">
+            <textarea id="opcode" placeholder="Opcodes"></textarea>
+        </div>
+    </div>
+    <div class="simulate-container">
+        <button id="step">Step</button>
+        <label for="pc" class="label">PC:</label>
+        <input type="text" id="pc" class="pc-input" readonly>
+        <label for="address" class="label">Memory Address:</label>
+        <input type="text" id="address" class="address-input" placeholder="Memory Address">
+    </div>
+    <div class="bottom-row">
+        <textarea id="registers" placeholder="Registers"></textarea>
+        <textarea id="memory" placeholder="Memory"></textarea>
+    </div>
+
+    <script>
+        // Define the opcode mappings
+
+        // Function to convert assembler instructions to opcodes
+        function convertToOpcodes(instructions) {
+            return instructions.map(instruction => assembleInstruction(instruction)).join('\n');
+        }
+
+        function assembleInstruction(instruction) {
+            const opcodeMap = {
+                'ADD': '000000',
+                'AND': '000001',
+                'OR': '000010',
+                'XOR': '000011',
+                'SUB': '000100',
+                'ANDN': '000101',
+                'ORN': '000110',
+                'XNOR': '000111',
+                'ADDX': '001000',
+                'UMUL': '001010',
+                'SMUL': '001011',
+                'SUBX': '001100',
+                'UDIV': '001110',
+                'SDIV': '001111',
+                'ADDcc': '010000',
+                'ANDcc': '010001',
+                'ORcc': '010010',
+                'XORcc': '010011',
+                'SUBcc': '010100',
+                'ANDNcc': '010101',
+                'ORNcc': '010110',
+                'XNORccrd': '010111',
+                'ADDXcc': '011000',
+                'UMULcc': '011010',
+                'SMULcc': '011011',
+                'SUBXcc': '011100',
+                'UDIVcc': '011110',
+                'SDIVcc': '011111',
+                'SLL': '100101',
+                'SRL': '100110',
+                'SRA': '100111',
+            };
+
+            const binary = (num, length) => num.toString(2).padStart(length, '0');
+
+            const parts = instruction.split(' ');
+            const opcode = parts[0];
+            const params = parts[1].split(',');
+
+            const r1 = parseInt(params[0].substring(1));
+            const r2 = parseInt(params[1].substring(1));
+            const lastParam = params[2].trim();
+
+            if (!(opcode in opcodeMap)) {
+                throw new Error(`Unknown opcode: ${opcode}`);
+            }
+
+            const opcodeBinary = opcodeMap[opcode];
+            const r1Binary = binary(r1, 5);
+            const r2Binary = binary(r2, 5);
+
+            let i;
+            let lastBinaryParam;
+
+            if (isNaN(lastParam)) {
+                // lastParam is a register
+                i = 0;
+                lastBinaryParam = binary(parseInt(lastParam.substring(1)), 13);
+            } else {
+                // lastParam is a constant
+                i = 1;
+                lastBinaryParam = binary(parseInt(lastParam), 13);
+            }
+
+            return `10${r1Binary}${opcodeBinary}${r2Binary}${i}${lastBinaryParam}`;
+        }
+
+        class CPU {
+            constructor() {
+
+                this.registers = Array(10).fill(0);
+                this.memory = {};
+                this.pc = 0; // Program counter
+                this.pc_step = 1
+            }
+
+            step(instructions) {
+
+                const ALU = {
+                    '000000': 'ADD',
+                    '000001': 'AND',
+                    '000010': 'OR',
+                    '000011': 'XOR',
+                    '000100': 'SUB',
+                    '000101': 'ANDN',
+                    '000110': 'ORN',
+                    '000111': 'XNOR',
+                    '001000': 'ADDX',
+                    '001010': 'UMUL',
+                    '001011': 'SMUL',
+                    '001100': 'SUBX',
+                    '001110': 'UDIV',
+                    '001111': 'SDIV',
+                    '010000': 'ADDcc',
+                    '010001': 'ANDcc',
+                    '010010': 'ORcc',
+                    '010011': 'XORcc',
+                    '010100': 'SUBcc',
+                    '010101': 'ANDNcc',
+                    '010110': 'ORNcc',
+                    '010111': 'XNORcc',
+                    '011000': 'ADDXcc',
+                    '011010': 'UMULcc',
+                    '011011': 'SMULcc',
+                    '011100': 'SUBXcc',
+                    '011110': 'UDIVcc',
+                    '011111': 'SDIVcc',
+                    '100101': 'SLL',
+                    '100110': 'SRL',
+                    '100111': 'SRA',
+                };
+
+                const simulateOperation = (IR, R, status = false, c = false) => {
+                    let cte22 = parseInt(IR.slice(32 - 22, 32 - 0), 2)
+                    let cte13 = parseInt(IR.slice(32 - 13, 32 - 0), 2)
+                    let rs2 = parseInt(IR.slice(32 - 5, 32 - 0), 2)
+                    let rs1Value = parseInt(IR.slice(32 - 19, 32 - 14), 2)
+                    let rd = parseInt(IR.slice(32 - 30, 32 - 25), 2)
+                    console.log(IR, rd, rs2, cte13, IR[31 - 31], IR[31 - 30])
+
+                    if (IR[31 - 31] == '1') {
+                        let rs2cte13 = (IR[31 - 13] == '1') ? cte13 : rs2
+                        if (IR[31 - 30] == '1') {
+                            console.log('Branch')
+                            this.pc = this.pc + this.pc_step
+
+                        } else {
+                            console.log('Alu')
+                            let alu_result;
+                            let opcode = ALU[IR.slice(32 - 25, 32 - 19)]
+                            switch (opcode) {
+                                case 'ADD':
+                                case 'ADDcc':
+                                case 'ADDX':
+                                case 'ADDXcc':
+                                    alu_result = rs1Value + rs2cte13 + (opcode.includes('X') ? c : 0);
+                                    break;
+                                case 'SUB':
+                                case 'SUBcc':
+                                case 'SUBX':
+                                case 'SUBXcc':
+                                    alu_result = rs1Value - rs2cte13 - (opcode.includes('X') ? c : 0);
+                                    break;
+                                case 'AND':
+                                case 'ANDcc':
+                                case 'ANDN':
+                                case 'ANDNcc':
+                                    alu_result = rs1Value & (opcode.includes('N') ? ~rs2cte13 : rs2cte13);
+                                    break;
+                                case 'OR':
+                                case 'ORcc':
+                                case 'ORN':
+                                case 'ORNcc':
+                                    alu_result = rs1Value | (opcode.includes('N') ? ~rs2cte13 : rs2cte13);
+                                    break;
+                                case 'XOR':
+                                case 'XORcc':
+                                case 'XNOR':
+                                case 'XNORccrd':
+                                    alu_result = rs1Value ^ rs2cte13;
+                                    if (opcode.includes('N')) result = ~result;
+                                    break;
+                                case 'UMUL':
+                                case 'UMULcc':
+                                case 'SMUL':
+                                case 'SMULcc':
+                                    alu_result = rs1Value * rs2cte13;
+                                    break;
+                                case 'UDIV':
+                                case 'UDIVcc':
+                                case 'SDIV':
+                                case 'SDIVcc':
+                                    alu_result = rs1Value / rs2cte13;
+                                    break;
+                                case 'SLL':
+                                    alu_result = rs1Value << rs2cte13;
+                                    break;
+                                case 'SRL':
+                                    alu_result = rs1Value >>> rs2cte13;
+                                    break;
+                                case 'SRA':
+                                    alu_result = rs1Value >> rs2cte13;
+                                    break;
+                                default:
+                                    throw new Error(`Unknown opcode: ${opcode}`);
+                            }
+                            console.log('rd', rd, alu_result)
+                            this.registers[rd] = alu_result;
+                            this.pc = this.pc + this.pc_step
+
+                        }
+                    } else {
+                        console.log('Branch')
+                        if (status) {
+
+                            this.pc = this.pc + (cte22 * this.pc_step)
+                        } else {
+                            this.pc = this.pc + this.pc_step
+                        }
+                    }
+                }
+
+                if (this.pc < instructions.length) {
+                    let instruction = instructions[this.pc];
+                    let c = 0
+                    let status = false
+                    simulateOperation(instruction, this.registers, status, c)
+                }
+            }
+        }
+
+        function updateRegisters(cpu) {
+            const registersTextArea = document.getElementById('registers');
+            registersTextArea.value = cpu.registers.map((val, idx) => `R${idx}: ${val}`).join('\n');
+        }
+
+        function highlightCurrentInstruction(pc, instructions) {
+            const assemblerTextArea = document.getElementById('assembler');
+            const lines = assemblerTextArea.value.split('\n');
+            const highlightedLines = lines.map((line, index) => index === pc ? `<span class="highlight">${index + 1}: ${line}</span>` : `${index + 1}: ${line}`);
+            assemblerTextArea.innerHTML = highlightedLines.join('\n');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const assemblerTextArea = document.getElementById('assembler');
+            const opcodeTextArea = document.getElementById('opcode');
+            assemblerTextArea.value = `ADD R1,R0,3\nSMUL R3,R1,2\nSUBcc R2,R3,1\nADD R4,R0,R3\nSMUL R3,R1,R2\nSUBcc R2,R3,R1`;
+
+            const cpu = new CPU();
+
+            document.getElementById('step').addEventListener('click', () => {
+                const instructions = assemblerTextArea.value.trim().split('\n');
+                if (cpu.pc === 0) {
+                    const opcodes = convertToOpcodes(instructions).trim();
+                    opcodeTextArea.value = opcodes.split('\n').map((opcode, index) => `${index + 1}: ${opcode}`).join('\n');
+                }
+                cpu.step(opcodeTextArea.value.trim().split('\n').map(line => line.split(': ')[1]));
+                updateRegisters(cpu);
+                document.getElementById('pc').value = cpu.pc;
+                highlightCurrentInstruction(cpu.pc, instructions);
+            });
+        });
+    </script>
+</body>
+
+</html>
