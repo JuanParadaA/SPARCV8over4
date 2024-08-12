@@ -1,347 +1,241 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPARC Simulator</title>
+    <title>Assembler Code Step Simulator</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            display: flex;
-            flex: 1;
-        }
-
-        .left-side,
-        .right-side {
-            width: 50%;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        .bottom-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        textarea {
-            width: 100%;
-            height: 200px;
-            box-sizing: border-box;
-            margin-bottom: 10px;
-        }
-
-        .simulate-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        .simulate-container>* {
-            margin: 0 10px;
-        }
-
-        .address-input,
-        .pc-input {
-            width: 150px;
-        }
-
-        .highlight {
-            background-color: yellow;
-        }
-
-        .label {
-            font-weight: bold;
-        }
+        textarea { width: 100%; }
+        pre { background-color: #f0f0f0; padding: 10px; }
+        table { width: 100%; }
+        th, td { padding: 5px; text-align: left; }
     </style>
 </head>
-
 <body>
-    <div class="container">
-        <div class="left-side">
-            <textarea id="assembler" placeholder="Assembler Instructions"></textarea>
-        </div>
-        <div class="right-side">
-            <textarea id="opcode" placeholder="Opcodes"></textarea>
-        </div>
-    </div>
-    <div class="simulate-container">
-        <button id="step">Step</button>
-        <label for="pc" class="label">PC:</label>
-        <input type="text" id="pc" class="pc-input" readonly>
-        <label for="address" class="label">Memory Address:</label>
-        <input type="text" id="address" class="address-input" placeholder="Memory Address">
-    </div>
-    <div class="bottom-row">
-        <textarea id="registers" placeholder="Registers"></textarea>
-        <textarea id="memory" placeholder="Memory"></textarea>
-    </div>
+    <h1>Assembler Code Step Simulator</h1>
+    <textarea id="codeInput" rows="15" cols="60">
+MOV R1,3
+LD R2,[R1+100]
+SMUL R3,R1,R2
+SUBcc R1,R1,1
+BzC -3
+
+CLR R1
+CLR R6
+
+CMP R1,100
+BzS 11
+NOP
+
+LD R2,[R1+100]
+LD R3,[R1+200]
+ADD R4,R2,R3
+LD R2,[R1+300]
+SMUL R5,R4,R2
+ADD R6,R6,R5
+
+INC R1,R1
+BA -10
+NOP
+
+LD R2,[R0+801]
+SMUL R2,R2,R6
+SWAP R2,R0,800
+
+LD R3,[R2+5]
+LD R3,[R2+R4]
+ST [R6+3],R2
+ST [R6+R3],R2
+    </textarea>
+    <br>
+    <button onclick="step()">Step</button>
+    <h2>Simulation Output</h2>
+    <pre id="output"></pre>
+    <h2>Register States</h2>
+    <table>
+        <thead>
+            <tr><th>Register</th><th>Value</th></tr>
+        </thead>
+        <tbody id="registerTable">
+        </tbody>
+    </table>
+    <h2>Memory (Edit Before Running)</h2>
+<textarea id="memoryInput" rows="10" cols="60">200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319</textarea>
 
     <script>
-        // Define the opcode mappings
+        const instructions = [
+            "ADD", "AND", "OR", "XOR", "SUB", "ANDN", "ORN", "XNOR", "ADDX", "UMUL", "SMUL", "SUBX", "UDIV", "SDIV",
+            "ADDcc", "ANDcc", "ORcc", "XORcc", "SUBcc", "ANDNcc", "ORNcc", "XNORcc", "ADDXcc", "UMULcc", "SMULcc", "SUBXcc", "UDIVcc", "SDIVcc",
+            "SLL", "SRL", "SRA",
+            "LD", "ST",
+            "BN", "BE", "BLE", "BL", "BLEU", "BCS", "BNEG", "BVS", "BA", "BNE", "BG", "BGE", "BGU", "BCC", "BPOS", "BVC",
+            "CALL", "RETL", "JMPL",
+            "SETHI",
+            "NOP", "MOV", "CMP", "TST", "NOT", "NEG", "INC", "DEC", "CLR",
+            "BnS", "BnC", "BzS", "BzC", "BcS", "BcC", "BvS", "BvC"
+        ];
 
-        // Function to convert assembler instructions to opcodes
-        function convertToOpcodes(instructions) {
-            return instructions.map(instruction => assembleInstruction(instruction)).join('\n');
+        const registers = { R0: 0, R1: 0, R2: 0, R3: 0, R4: 0, R5: 0, R6: 0, R7: 0 };
+        let memory = [];
+
+        let parsed = [];
+        let instructionPointer = 0;
+
+        function tokenize(code) {
+            return code
+                .replace(/,\s*/g, ',') // Remove extra spaces after commas
+                .split(/[\s,]+/) // Split by any whitespace
+                .filter(token => token.length > 0); // Remove empty tokens
+                
         }
 
-        function assembleInstruction(instruction) {
-            const opcodeMap = {
-                'ADD': '000000',
-                'AND': '000001',
-                'OR': '000010',
-                'XOR': '000011',
-                'SUB': '000100',
-                'ANDN': '000101',
-                'ORN': '000110',
-                'XNOR': '000111',
-                'ADDX': '001000',
-                'UMUL': '001010',
-                'SMUL': '001011',
-                'SUBX': '001100',
-                'UDIV': '001110',
-                'SDIV': '001111',
-                'ADDcc': '010000',
-                'ANDcc': '010001',
-                'ORcc': '010010',
-                'XORcc': '010011',
-                'SUBcc': '010100',
-                'ANDNcc': '010101',
-                'ORNcc': '010110',
-                'XNORccrd': '010111',
-                'ADDXcc': '011000',
-                'UMULcc': '011010',
-                'SMULcc': '011011',
-                'SUBXcc': '011100',
-                'UDIVcc': '011110',
-                'SDIVcc': '011111',
-                'SLL': '100101',
-                'SRL': '100110',
-                'SRA': '100111',
-            };
+        function parse(tokens) {
+            const parsed = [];
+            let i = 0;
 
-            const binary = (num, length) => num.toString(2).padStart(length, '0');
+            while (i < tokens.length) {
+                const token = tokens[i];
 
-            const parts = instruction.split(' ');
-            const opcode = parts[0];
-            const params = parts[1].split(',');
+                if (instructions.includes(token)) {
+                    const instruction = { op: token };
+                    i++;
 
-            const r1 = parseInt(params[0].substring(1));
-            const r2 = parseInt(params[1].substring(1));
-            const lastParam = params[2].trim();
+                    const args = [];
+                    while (i < tokens.length && !instructions.includes(tokens[i]) && tokens[i] !== 'NOP') {
+                        let arg = tokens[i].replace(/,$/, '');
 
-            if (!(opcode in opcodeMap)) {
-                throw new Error(`Unknown opcode: ${opcode}`);
-            }
-
-            const opcodeBinary = opcodeMap[opcode];
-            const r1Binary = binary(r1, 5);
-            const r2Binary = binary(r2, 5);
-
-            let i;
-            let lastBinaryParam;
-
-            if (isNaN(lastParam)) {
-                // lastParam is a register
-                i = 0;
-                lastBinaryParam = binary(parseInt(lastParam.substring(1)), 13);
-            } else {
-                // lastParam is a constant
-                i = 1;
-                lastBinaryParam = binary(parseInt(lastParam), 13);
-            }
-
-            return `10${r1Binary}${opcodeBinary}${r2Binary}${i}${lastBinaryParam}`;
-        }
-
-        class CPU {
-            constructor() {
-
-                this.registers = Array(10).fill(0);
-                this.memory = {};
-                this.pc = 0; // Program counter
-                this.pc_step = 1
-            }
-
-            step(instructions) {
-
-                const ALU = {
-                    '000000': 'ADD',
-                    '000001': 'AND',
-                    '000010': 'OR',
-                    '000011': 'XOR',
-                    '000100': 'SUB',
-                    '000101': 'ANDN',
-                    '000110': 'ORN',
-                    '000111': 'XNOR',
-                    '001000': 'ADDX',
-                    '001010': 'UMUL',
-                    '001011': 'SMUL',
-                    '001100': 'SUBX',
-                    '001110': 'UDIV',
-                    '001111': 'SDIV',
-                    '010000': 'ADDcc',
-                    '010001': 'ANDcc',
-                    '010010': 'ORcc',
-                    '010011': 'XORcc',
-                    '010100': 'SUBcc',
-                    '010101': 'ANDNcc',
-                    '010110': 'ORNcc',
-                    '010111': 'XNORcc',
-                    '011000': 'ADDXcc',
-                    '011010': 'UMULcc',
-                    '011011': 'SMULcc',
-                    '011100': 'SUBXcc',
-                    '011110': 'UDIVcc',
-                    '011111': 'SDIVcc',
-                    '100101': 'SLL',
-                    '100110': 'SRL',
-                    '100111': 'SRA',
-                };
-
-                const simulateOperation = (IR, R, status = false, c = false) => {
-                    let cte22 = parseInt(IR.slice(32 - 22, 32 - 0), 2)
-                    let cte13 = parseInt(IR.slice(32 - 13, 32 - 0), 2)
-                    let rs2 = parseInt(IR.slice(32 - 5, 32 - 0), 2)
-                    let rs1Value = parseInt(IR.slice(32 - 19, 32 - 14), 2)
-                    let rd = parseInt(IR.slice(32 - 30, 32 - 25), 2)
-                    console.log(IR, rd, rs2, cte13, IR[31 - 31], IR[31 - 30])
-
-                    if (IR[31 - 31] == '1') {
-                        let rs2cte13 = (IR[31 - 13] == '1') ? cte13 : rs2
-                        if (IR[31 - 30] == '1') {
-                            console.log('Branch')
-                            this.pc = this.pc + this.pc_step
-
-                        } else {
-                            console.log('Alu')
-                            let alu_result;
-                            let opcode = ALU[IR.slice(32 - 25, 32 - 19)]
-                            switch (opcode) {
-                                case 'ADD':
-                                case 'ADDcc':
-                                case 'ADDX':
-                                case 'ADDXcc':
-                                    alu_result = rs1Value + rs2cte13 + (opcode.includes('X') ? c : 0);
-                                    break;
-                                case 'SUB':
-                                case 'SUBcc':
-                                case 'SUBX':
-                                case 'SUBXcc':
-                                    alu_result = rs1Value - rs2cte13 - (opcode.includes('X') ? c : 0);
-                                    break;
-                                case 'AND':
-                                case 'ANDcc':
-                                case 'ANDN':
-                                case 'ANDNcc':
-                                    alu_result = rs1Value & (opcode.includes('N') ? ~rs2cte13 : rs2cte13);
-                                    break;
-                                case 'OR':
-                                case 'ORcc':
-                                case 'ORN':
-                                case 'ORNcc':
-                                    alu_result = rs1Value | (opcode.includes('N') ? ~rs2cte13 : rs2cte13);
-                                    break;
-                                case 'XOR':
-                                case 'XORcc':
-                                case 'XNOR':
-                                case 'XNORccrd':
-                                    alu_result = rs1Value ^ rs2cte13;
-                                    if (opcode.includes('N')) result = ~result;
-                                    break;
-                                case 'UMUL':
-                                case 'UMULcc':
-                                case 'SMUL':
-                                case 'SMULcc':
-                                    alu_result = rs1Value * rs2cte13;
-                                    break;
-                                case 'UDIV':
-                                case 'UDIVcc':
-                                case 'SDIV':
-                                case 'SDIVcc':
-                                    alu_result = rs1Value / rs2cte13;
-                                    break;
-                                case 'SLL':
-                                    alu_result = rs1Value << rs2cte13;
-                                    break;
-                                case 'SRL':
-                                    alu_result = rs1Value >>> rs2cte13;
-                                    break;
-                                case 'SRA':
-                                    alu_result = rs1Value >> rs2cte13;
-                                    break;
-                                default:
-                                    throw new Error(`Unknown opcode: ${opcode}`);
+                        if (arg.startsWith('[') && arg.endsWith(']')) {
+                            arg = arg.slice(1, -1); // Remove brackets
+                            if (arg.includes('+')) {
+                                args.push(`[${arg}]`);
+                            } else {
+                                args.push(arg);
                             }
-                            console.log('rd', rd, alu_result)
-                            this.registers[rd] = alu_result;
-                            this.pc = this.pc + this.pc_step
-
-                        }
-                    } else {
-                        console.log('Branch')
-                        if (status) {
-
-                            this.pc = this.pc + (cte22 * this.pc_step)
                         } else {
-                            this.pc = this.pc + this.pc_step
+                            args.push(arg);
                         }
+
+                        i++;
                     }
+                    instruction.args = args;
+                    parsed.push(instruction);
+                } else {
+                    i++;
+                }
+            }
+            return parsed;
+        }
+
+        function executeInstruction(instruction) {
+            const args = instruction.args.map(arg => {
+                if (arg.startsWith('[')) {
+                    const parts = arg.slice(1, -1).split('+');
+                    const regValue = registers[parts[0]];
+                    const offset = parts[1] ? parseInt(parts[1], 10) : 0;
+                    return regValue + offset;
+                } else if (registers.hasOwnProperty(arg)) {
+                    return registers[arg];
+                } else {
+                    return parseInt(arg, 10);
+                }
+            });
+
+            switch (instruction.op) {
+                case 'MOV':
+                    
+                    registers[instruction.args[0]] = args[1];
+                    break;
+                case 'LD':
+                    registers[instruction.args[0]] = memory[args[1]];
+                    break;
+                case 'ST':
+                    memory[args[0]] = args[1];
+                    break;
+                case 'ADD':
+                    registers[instruction.args[0]] = args[1] + args[2];
+                    break;
+                case 'SUB':
+                    registers[instruction.args[0]] = args[1] - args[2];
+                    break;
+                case 'SUBcc':
+                    registers[instruction.args[0]] = args[1] - args[2];
+                    break;
+                case 'SMUL':
+                    registers[instruction.args[0]] = args[1] * args[2];
+                    break;
+                case 'INC':
+                    registers[instruction.args[0]] += 1;
+                    break;
+                case 'DEC':
+                    registers[instruction.args[0]] -= 1;
+                    break;
+                case 'CLR':
+                    registers[instruction.args[0]] = 0;
+                    break;
+                case 'CMP':
+                    registers['FLAG'] = args[0] - args[1];
+                    break;
+                case 'BzS':
+                    if (registers['FLAG'] === 0) {
+                        return args[0];
+                    }
+                    break;
+                case 'BzC':
+                    if (registers['FLAG'] !== 0) {
+                        return args[0];
+                    }
+                    break;
+                case 'BA':
+                    return args[0];
+                case 'NOP':
+                    break;
+                default:
+                    console.log(`Unknown instruction: ${instruction.op}`);
+            }
+            return null;
+        }
+
+        function step() {
+            if (instructionPointer === 0) {
+                const code = document.getElementById('codeInput').value;
+                const tokens = tokenize(code);
+                console.log(tokens)
+                parsed = parse(tokens);
+                console.log(parsed)
+                
+                const memoryInput = document.getElementById('memoryInput').value;
+                memory = memoryInput.split(',').map(Number); // Initialize memory from textarea
+            }
+
+            if (instructionPointer < parsed.length) {
+                const output = `Executing: ${parsed[instructionPointer].op} ${parsed[instructionPointer].args.join(", ")}\n`;
+                document.getElementById('output').textContent += output;
+
+                const jump = executeInstruction(parsed[instructionPointer]);
+                if (jump !== null) {
+                    instructionPointer += jump;
+                } else {
+                    instructionPointer++;
                 }
 
-                if (this.pc < instructions.length) {
-                    let instruction = instructions[this.pc];
-                    let c = 0
-                    let status = false
-                    simulateOperation(instruction, this.registers, status, c)
-                }
+                updateRegisterTable();
+                updateMemoryTextarea();
+            } else {
+                document.getElementById('output').textContent += "Simulation complete.\n";
             }
         }
 
-        function updateRegisters(cpu) {
-            const registersTextArea = document.getElementById('registers');
-            registersTextArea.value = cpu.registers.map((val, idx) => `R${idx}: ${val}`).join('\n');
+        function updateRegisterTable() {
+            const table = document.getElementById('registerTable');
+            table.innerHTML = '';
+            for (const [reg, value] of Object.entries(registers)) {
+                table.innerHTML += `<tr><td>${reg}</td><td>${value}</td></tr>`;
+            }
         }
 
-        function highlightCurrentInstruction(pc, instructions) {
-            const assemblerTextArea = document.getElementById('assembler');
-            const lines = assemblerTextArea.value.split('\n');
-            const highlightedLines = lines.map((line, index) => index === pc ? `<span class="highlight">${index + 1}: ${line}</span>` : `${index + 1}: ${line}`);
-            assemblerTextArea.innerHTML = highlightedLines.join('\n');
+        function updateMemoryTextarea() {
+            document.getElementById('memoryInput').value = memory.join(', ');
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const assemblerTextArea = document.getElementById('assembler');
-            const opcodeTextArea = document.getElementById('opcode');
-            assemblerTextArea.value = `ADD R1,R0,3\nSMUL R3,R1,2\nSUBcc R2,R3,1\nADD R4,R0,R3\nSMUL R3,R1,R2\nSUBcc R2,R3,R1`;
-
-            const cpu = new CPU();
-
-            document.getElementById('step').addEventListener('click', () => {
-                const instructions = assemblerTextArea.value.trim().split('\n');
-                if (cpu.pc === 0) {
-                    const opcodes = convertToOpcodes(instructions).trim();
-                    opcodeTextArea.value = opcodes.split('\n').map((opcode, index) => `${index + 1}: ${opcode}`).join('\n');
-                }
-                cpu.step(opcodeTextArea.value.trim().split('\n').map(line => line.split(': ')[1]));
-                updateRegisters(cpu);
-                document.getElementById('pc').value = cpu.pc;
-                highlightCurrentInstruction(cpu.pc, instructions);
-            });
-        });
     </script>
 </body>
-
 </html>
