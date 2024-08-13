@@ -14,38 +14,13 @@
 <body>
     <h1>Assembler Code Step Simulator</h1>
     <textarea id="codeInput" rows="15" cols="60">
-MOV R1,3
-LD R2,[R1+100]
-SMUL R3,R1,R2
+MOV R1,5
+SETHI R2,1048944
+LD R3,[R2+28]
 SUBcc R1,R1,1
 BzC -3
-
-CLR R1
-CLR R6
-
-CMP R1,100
-BzS 11
 NOP
 
-LD R2,[R1+100]
-LD R3,[R1+200]
-ADD R4,R2,R3
-LD R2,[R1+300]
-SMUL R5,R4,R2
-ADD R6,R6,R5
-
-INC R1,R1
-BA -10
-NOP
-
-LD R2,[R0+801]
-SMUL R2,R2,R6
-SWAP R2,R0,800
-
-LD R3,[R2+5]
-LD R3,[R2+R4]
-ST [R6+3],R2
-ST [R6+R3],R2
     </textarea>
     <br>
     <button onclick="step()">Step</button>
@@ -59,8 +34,21 @@ ST [R6+R3],R2
         <tbody id="registerTable">
         </tbody>
     </table>
+
+   <div id="memory-container">
+        <input type="text" id="memory_address" placeholder="Memory Address"/>
+        <div id="backend-switch">
+            <label class="switch">
+                <input type="checkbox">
+                <span class="slider"></span>
+            </label>
+            <span>Backend</span>
+        </div>
+    </div>
+    
+    
     <h2>Memory (Edit Before Running)</h2>
-<textarea id="memoryInput" rows="10" cols="60">200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319</textarea>
+<textarea id="memoryInput" rows="10" cols="60">   200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319</textarea>
 
     <script>
         const instructions = [
@@ -76,7 +64,7 @@ ST [R6+R3],R2
         ];
 
         const registers = { R0: 0, R1: 0, R2: 0, R3: 0, R4: 0, R5: 0, R6: 0, R7: 0 };
-        let memory = [];
+        let memory = {};
 
         let parsed = [];
         let instructionPointer = 0;
@@ -146,6 +134,9 @@ ST [R6+R3],R2
                     registers[instruction.args[0]] = args[1];
                     break;
                 case 'LD':
+                    if (!(memory.hasOwnProperty([args[1]]))){
+                        memory[args[1]] = parseInt(prompt("Value of memory "+args[1], "0")); 
+                    }
                     registers[instruction.args[0]] = memory[args[1]];
                     break;
                 case 'ST':
@@ -159,6 +150,7 @@ ST [R6+R3],R2
                     break;
                 case 'SUBcc':
                     registers[instruction.args[0]] = args[1] - args[2];
+                    registers['FLAG'] = args[1] - args[2];
                     break;
                 case 'SMUL':
                     registers[instruction.args[0]] = args[1] * args[2];
@@ -168,6 +160,9 @@ ST [R6+R3],R2
                     break;
                 case 'DEC':
                     registers[instruction.args[0]] -= 1;
+                    break;
+                case 'SETHI':
+                    registers[instruction.args[0]] = args[1] << 10;
                     break;
                 case 'CLR':
                     registers[instruction.args[0]] = 0;
@@ -187,6 +182,7 @@ ST [R6+R3],R2
                     break;
                 case 'BA':
                     return args[0];
+                    break;
                 case 'NOP':
                     break;
                 default:
@@ -204,7 +200,10 @@ ST [R6+R3],R2
                 console.log(parsed)
                 
                 const memoryInput = document.getElementById('memoryInput').value;
-                memory = memoryInput.split(',').map(Number); // Initialize memory from textarea
+                for (let i = 100; i < 110; i++) {
+                    memory[i] = i+1000;
+                   }
+                //memory = memoryInput.split(',').map(Number); // Initialize memory from textarea
             }
 
             if (instructionPointer < parsed.length) {
@@ -234,7 +233,8 @@ ST [R6+R3],R2
         }
 
         function updateMemoryTextarea() {
-            document.getElementById('memoryInput').value = memory.join(', ');
+        console.log('updateMemoryTextarea',memory)
+            document.getElementById('memoryInput').value = JSON.stringify(memory, null, 4);
         }
     </script>
 </body>
