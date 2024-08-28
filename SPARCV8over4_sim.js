@@ -1,58 +1,4 @@
-/*
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assembler Code Step Simulator</title>
-    <style>
-        textarea { width: 100%; }
-        pre { background-color: #f0f0f0; padding: 10px; }
-        table { width: 100%; }
-        th, td { padding: 5px; text-align: left; }
-    </style>
-</head>
-<body>
-    <h1>Assembler Code Step Simulator</h1>
-    <textarea id="codeInput" rows="15" cols="60">
-MOV R1,5
-SETHI R2,1048944
-LD R3,[R2+28]
-SUBcc R1,R1,1
-BzC -3
-NOP
-
-    </textarea>
-    <br>
-    <button onclick="step()">Step</button
-    <h2>Simulation Output</h2>
-    <pre id="output"></pre>
-    <h2>Register States</h2>
-    <table>
-        <thead>
-            <tr><th>Register</th><th>Value</th></tr>
-        </thead>
-        <tbody id="registerTable">
-        </tbody>
-    </table>
-
-   <div id="memory-container">
-        <!--input type="text" id="memory_address" placeholder="Memory Address"/-->
-        <div id="backend-switch">
-            <label class="switch">
-                <input type="checkbox">
-                <span class="slider"></span>
-            </label>
-            <span>Backend</span>
-        </div>
-    </div>
-    
-    
-    <h2>Memory </h2>
-<textarea id="memoryInput" rows="10" cols="60">  </textarea>
-
-    <script>
-*/
+        const sw_back = document.getElementById("backend-checkbox");
         const instructions = [
             "ADD", "AND", "OR", "XOR", "SUB", "ANDN", "ORN", "XNOR", "ADDX", "UMUL", "SMUL", "SUBX", "UDIV", "SDIV",
             "ADDcc", "ANDcc", "ORcc", "XORcc", "SUBcc", "ANDNcc", "ORNcc", "XNORcc", "ADDXcc", "UMULcc", "SMULcc", "SUBXcc", "UDIVcc", "SDIVcc",
@@ -62,7 +8,8 @@ NOP
             "CALL", "RETL", "JMPL",
             "SETHI",
             "NOP", "MOV", "CMP", "TST", "NOT", "NEG", "INC", "DEC", "CLR",
-            "BnS", "BnC", "BzS", "BzC", "BcS", "BcC", "BvS", "BvC"
+            "BnS", "BnC", "BzS", "BzC", "BcS", "BcC", "BvS", "BvC",
+            "malloc", "backend",
         ];
 
         const registers = { R0: 0, R1: 0, R2: 0, R3: 0, R4: 0, R5: 0, R6: 0, R7: 0 };
@@ -116,7 +63,38 @@ NOP
             return parsed;
         }
 
-        function executeInstruction(instruction) {
+        function read_memory(address){
+            if (sw_back.checked) {
+                //...
+            } else{
+                if (!(memory.hasOwnProperty(address))){
+                            memory[address] = parseInt(prompt("Value of memory "+address, "0")); 
+                        }
+                return memory[address];
+            }
+        }
+
+        function write_memory(address,data){
+            if (sw_back.checked) {
+                //...
+            } else{
+                memory[address] = data; 
+            }
+        }
+
+        function malloc(num_bytes){
+            if (sw_back.checked) {
+                //...
+            } else{
+                address=parseInt(prompt("Address of memory ", "0"));
+                for (var i = 0; i < num_bytes; i=i+4) {
+                    memory[address+i] = 0; 
+                }
+            }
+        }
+        
+
+function executeInstruction(instruction) {
             const args = instruction.args.map(arg => {
                 if (arg.startsWith('[')) {
                     const parts = arg.slice(1, -1).split('+');
@@ -136,13 +114,10 @@ NOP
                     registers[instruction.args[0]] = args[1];
                     break;
                 case 'LD':
-                    if (!(memory.hasOwnProperty([args[1]]))){
-                        memory[args[1]] = parseInt(prompt("Value of memory "+args[1], "0")); 
-                    }
-                    registers[instruction.args[0]] = memory[args[1]];
+                    registers[instruction.args[0]] = read_memory(args[1]);
                     break;
                 case 'ST':
-                    memory[args[0]] = args[1];
+                    write_memory(args[0], args[1]);
                     break;
                 case 'ADD':
                     registers[instruction.args[0]] = args[1] + args[2];
@@ -187,6 +162,14 @@ NOP
                     break;
                 case 'NOP':
                     break;
+                case 'malloc':
+                    malloc(args[0])
+                    break;
+                case 'backend':
+                    console.log(sw_back.checked)
+                    sw_back.checked=Boolean(args[0])
+                    console.log(sw_back.checked)
+                    break;
                 default:
                     console.log(`Unknown instruction: ${instruction.op}`);
             }
@@ -202,7 +185,7 @@ NOP
                 console.log(parsed)
                 
                 const memoryInput = document.getElementById('memoryInput').value;
-                for (let i = 100; i < 110; i++) {
+                for (let i = 100; i < 116; i=i+4) {
                     memory[i] = i+1000;
                    }
                 //memory = memoryInput.split(',').map(Number); // Initialize memory from textarea
@@ -238,7 +221,3 @@ NOP
         console.log('updateMemoryTextarea',memory)
             document.getElementById('memoryInput').value = JSON.stringify(memory, null, 4);
         }
-/*    </script>
-</body>
-</html>
-*/
