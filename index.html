@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assembler Code Step Simulator</title>
+    <style>
+        textarea { width: 100%; }
+        pre { background-color: #f0f0f0; padding: 10px; }
+        table { width: 100%; }
+        th, td { padding: 5px; text-align: left; }
+    </style>
+</head>
+<body>
+    <h1>Assembler Code Step Simulator</h1>
+    <textarea id="codeInput" rows="15" cols="60">
+backend 0
+malloc R5,16
+MOV R1,5
+SETHI R2,1048944
+LD R3,[R2+28]
+SUBcc R1,R1,1
+BzC -3
+backend  1
+NOP
+
+    </textarea>
+    <br>
+    <button onclick="step()"  id="btn_step">Step</button
+    <h2>Simulation Output</h2>
+    <pre id="output"></pre>
+    <h2>Register States</h2>
+    <table>
+        <thead>
+            <tr><th>Register</th><th>Value</th></tr>
+        </thead>
+        <tbody id="registerTable">
+        </tbody>
+    </table>
+
+  
+
+<div id="memory-container">
+    <!--input type="text" id="memory_address" placeholder="Memory Address"/-->
+    <div id="backend-switch">
+        <label class="switch">
+            <input type="checkbox" id="backend-checkbox">
+            <span class="slider"></span>
+        </label>
+        <span id="backend-text">Backend</span>
+    </div>
+</div> 
+    
+    <h2>Memory </h2>
+<textarea id="memoryInput" rows="10" cols="60">  </textarea>
+
+
+        <!-- Link to the external JavaScript file -->
+        <script src="https://gerardomunoz.github.io/SPARCV8over4/SPARCV8over4_sim.js"></script>
+        <!--script src="http://192.168.175.1:8000/SPARCV8over4_sim.js"></script-->
+    </body>
+</html>
