@@ -51,7 +51,7 @@ def malloc(num_bytes,rd):
 #################################
 
 
-URL_other='http://192.168.175.1:8000/'
+URL_other='https://gerardomunoz.github.io'
 
 # Connect to Wi-Fi
 ssid = 'Ejemplo'
