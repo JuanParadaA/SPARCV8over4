@@ -1,5 +1,8 @@
 #Falta convertir valores registros y  mem en hexa
 #Bloquear Step si esta en rojo
+#Actualizar memoria callback de backend
+#Mem y registros repetidos Quitar uno
+#ordenar registros y memoria
 
 import network
 import socket
