@@ -1,5 +1,7 @@
         const sw_back = document.getElementById("backend-checkbox");
-        const txt_back = document.getElementById("backend-text");
+        //const txt_back = document.getElementById("backend-text");
+        const btn_step = document.getElementById("btn_step");
+        
         const instructions = [
             "ADD", "AND", "OR", "XOR", "SUB", "ANDN", "ORN", "XNOR", "ADDX", "UMUL", "SMUL", "SUBX", "UDIV", "SDIV",
             "ADDcc", "ANDcc", "ORcc", "XORcc", "SUBcc", "ANDNcc", "ORNcc", "XNORcc", "ADDXcc", "UMULcc", "SMULcc", "SUBXcc", "UDIVcc", "SDIVcc",
@@ -65,15 +67,20 @@
         }
 
        function sendJson(jsonData) {
-            txt_back.style.color = "red"
-             console.log('sendJson')
+            btn_step.style.color = "red"
+            btn_step.textContent  = "Wait";
+            //btn_step.onclick = "";
+            console.log('sendJson')
             const queryString = new URLSearchParams(jsonData).toString();
 
             fetch(`/api?${queryString}`)
                 .then(response => response.json())  // Expecting a JSON response
                 .then(data => {
                     console.log('sendJson',data);
-                    txt_back.style.color = "black";
+                    btn_step.style.color = "black";
+                    btn_step.textContent  = "Step";
+                    //btn_step.onclick = "step()";
+                    
                    
                     for (const [key, value] of Object.entries(data)) {
                         console.log(`Key: ${key}, Value: ${value}`);

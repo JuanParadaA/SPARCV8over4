@@ -1,8 +1,5 @@
 #Falta convertir valores registros y  mem en hexa
-# Falt arreglar porque no muestra el valor en el registro
-#Falta asignar en un reg el valor de malloc Rd, R0, CteRs2
 #Bloquear Step si esta en rojo
-# borrar rd inutil
 
 import network
 import socket
@@ -101,7 +98,7 @@ NOP
 
     </textarea>
     <br>
-    <button onclick="step()">Step</button
+    <button onclick="step()"  id="btn_step">Step</button
     <h2>Simulation Output</h2>
     <pre id="output"></pre>
     <h2>Register States</h2>
@@ -131,8 +128,8 @@ NOP
 
 
         <!-- Link to the external JavaScript file -->
-        <!--script src="https://gerardomunoz.github.io/SPARCV8over4/SPARCV8over4_sim.js"--></script>
-        <script src="http://192.168.175.1:8000/SPARCV8over4_sim.js"></script>
+        <script src="https://gerardomunoz.github.io/SPARCV8over4/SPARCV8over4_sim.js"></script>
+        <!--script src="http://192.168.175.1:8000/SPARCV8over4_sim.js"></script-->
     </body>
 </html>
 """
