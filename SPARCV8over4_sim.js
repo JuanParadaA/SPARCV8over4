@@ -228,7 +228,10 @@ function executeInstruction(instruction) {
                     break;
                 case 'NOP':
                     break;
-                case 'malloc': //malloc Rd,  CteRs2
+                case 'malloc': //malloc Rd,  Cte
+                        // malloc: Allocates a block of memory on the heap at runtime.
+                        // Rd: Register that stores the address of the beginning of the allocated block.
+                        // Cte: The number of bytes to allocate, which must be a multiple of 4 to ensure proper 4 bytes memory alignment.
                     console.log('malloc')
                     malloc(args[1],instruction.args[0])
                     break;
