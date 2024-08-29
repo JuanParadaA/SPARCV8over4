@@ -1,4 +1,5 @@
         const sw_back = document.getElementById("backend-checkbox");
+        const txt_back = document.getElementById("backend-text");
         const instructions = [
             "ADD", "AND", "OR", "XOR", "SUB", "ANDN", "ORN", "XNOR", "ADDX", "UMUL", "SMUL", "SUBX", "UDIV", "SDIV",
             "ADDcc", "ANDcc", "ORcc", "XORcc", "SUBcc", "ANDNcc", "ORNcc", "XNORcc", "ADDXcc", "UMULcc", "SMULcc", "SUBXcc", "UDIVcc", "SDIVcc",
@@ -13,7 +14,7 @@
         ];
 
         const registers = { R0: 0, R1: 0, R2: 0, R3: 0, R4: 0, R5: 0, R6: 0, R7: 0 };
-        let memory = {};
+        let memory = registers//{R0: 0, R1: 0, R2: 0, R3: 0, R4: 0, R5: 0, R6: 0, R7: 0};
 
         let parsed = [];
         let instructionPointer = 0;
@@ -63,8 +64,41 @@
             return parsed;
         }
 
-        function read_memory(address){
+       function sendJson(jsonData) {
+            txt_back.style.color = "red"
+             console.log('sendJson')
+            const queryString = new URLSearchParams(jsonData).toString();
+
+            fetch(`/api?${queryString}`)
+                .then(response => response.json())  // Expecting a JSON response
+                .then(data => {
+                    console.log('sendJson',data);
+                    txt_back.style.color = "black";
+                   
+                    for (const [key, value] of Object.entries(data)) {
+                        console.log(`Key: ${key}, Value: ${value}`);
+                        memory[key]=parseInt(value)
+                    }
+                 })
+                .catch(error => console.error('sendJson Error:', error));
+        }
+
+
+        function read_memory(address,rd){
+            if (address % 4 !== 0) {
+                throw new Error(`The address ${address} is not divisible by 4.`);
+            }
             if (sw_back.checked) {
+                //console.log('malloc..2')
+                const jsonData = {
+                    read_memory: [address,rd],
+                    //rd:rd
+                    //key2b: "value2b",
+                    //key3c: "value3c"
+                };
+
+                sendJson(jsonData)
+                //...
                 //...
             } else{
                 if (!(memory.hasOwnProperty(address))){
@@ -75,16 +109,39 @@
         }
 
         function write_memory(address,data){
+            if (address % 4 !== 0) {
+                throw new Error(`The address ${address} is not divisible by 4.`);
+            }
             if (sw_back.checked) {
+                //console.log('malloc..2')
+                const jsonData = {
+                    write_memory: [address,data],
+                    //key2b: "value2b",
+                    //key3c: "value3c"
+                };
+
+                sendJson(jsonData)
                 //...
             } else{
                 memory[address] = data; 
             }
         }
 
-        function malloc(num_bytes){
+        function malloc(num_bytes,rd){
+            if (num_bytes % 4 !== 0) {
+                throw new Error(`The number ${num_bytes} is not divisible by 4.`);
+            }
+            console.log('malloc..1a')
             if (sw_back.checked) {
-                //...
+                
+                const jsonData = {
+                    malloc: [num_bytes,rd],
+                    //rd,rd
+                    //key2b: "value2b",
+                    //key3c: "value3c"
+                };
+                console.log('malloc..2',jsonData)
+                sendJson(jsonData)
             } else{
                 address=parseInt(prompt("Address of memory ", "0"));
                 for (var i = 0; i < num_bytes; i=i+4) {
@@ -101,7 +158,8 @@ function executeInstruction(instruction) {
                     const regValue = registers[parts[0]];
                     const offset = parts[1] ? parseInt(parts[1], 10) : 0;
                     return regValue + offset;
-                } else if (registers.hasOwnProperty(arg)) {
+                //} else if (registers.hasOwnProperty(arg)) {
+                } else if (arg.startsWith('R')) {    
                     return registers[arg];
                 } else {
                     return parseInt(arg, 10);
@@ -114,10 +172,11 @@ function executeInstruction(instruction) {
                     registers[instruction.args[0]] = args[1];
                     break;
                 case 'LD':
-                    registers[instruction.args[0]] = read_memory(args[1]);
+                    //registers[instruction.args[0]] = read_memory(args[1]);
+                    read_memory(args[1],instruction.args[0]);
                     break;
                 case 'ST':
-                    write_memory(args[0], args[1]);
+                    write_memory(args[0], instruction.args[1]);
                     break;
                 case 'ADD':
                     registers[instruction.args[0]] = args[1] + args[2];
@@ -162,13 +221,14 @@ function executeInstruction(instruction) {
                     break;
                 case 'NOP':
                     break;
-                case 'malloc':
-                    malloc(args[0])
+                case 'malloc': //malloc Rd,  CteRs2
+                    console.log('malloc')
+                    malloc(args[1],instruction.args[0])
                     break;
-                case 'backend':
-                    console.log(sw_back.checked)
+                case 'backend': //backend 0; backend 1
+                    console.log('backend',sw_back.checked)
                     sw_back.checked=Boolean(args[0])
-                    console.log(sw_back.checked)
+                    console.log('backend',sw_back.checked)
                     break;
                 default:
                     console.log(`Unknown instruction: ${instruction.op}`);
@@ -221,3 +281,4 @@ function executeInstruction(instruction) {
         console.log('updateMemoryTextarea',memory)
             document.getElementById('memoryInput').value = JSON.stringify(memory, null, 4);
         }
+//Powered by ChatGPT
