@@ -204,7 +204,7 @@ function executeInstruction(instruction) {
                 case 'DEC':
                     registers[instruction.args[0]] -= 1;
                     break;
-                case 'SLL': // Shift Left Logical
+                case 'SLL':
                     registers[instruction.args[0]] = args[1] << args[2];
                     break;
                 case 'SETHI':
