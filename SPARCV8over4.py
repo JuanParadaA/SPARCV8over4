@@ -99,16 +99,20 @@ BzC -3
 NOP
 backend  0
 NOP
+NOP
 backend 1
 malloc R5,16
 MOV R1,5
 SETHI R2,3407872
-LD R3,[R2+128]
-ST [R2+128],R1
+ST [R2+172],31744
+ST [R2+136],R1
+ST [R2+128],R0
+LD R3,[R2+148]
 SUBcc R1,R1,1
-BzC -3
+BzC -2
 NOP
 backend  0
+NOP
 NOP
     </textarea>
     <br>
