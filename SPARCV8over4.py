@@ -96,9 +96,20 @@ SETHI R2,1048944
 LD R3,[R2+28]
 SUBcc R1,R1,1
 BzC -3
+NOP
 backend  0
 NOP
-
+backend 1
+malloc R5,16
+MOV R1,5
+SETHI R2,3407872
+LD R3,[R2+128]
+ST [R2+128],R1
+SUBcc R1,R1,1
+BzC -3
+NOP
+backend  0
+NOP
     </textarea>
     <br>
     <button onclick="step()"  id="btn_step">Step</button>
@@ -323,7 +334,7 @@ function executeInstruction(instruction) {
                     read_memory(args[1],instruction.args[0]);
                     break;
                 case 'ST':
-                    write_memory(args[0], instruction.args[1]);
+                    write_memory(args[0], args[1]);
                     break;
                 case 'ADD':
                     registers[instruction.args[0]] = args[1] + args[2];
