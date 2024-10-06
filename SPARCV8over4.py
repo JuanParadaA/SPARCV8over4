@@ -359,6 +359,9 @@ function executeInstruction(instruction) {
                 case 'DEC':
                     registers[instruction.args[0]] -= 1;
                     break;
+                case 'SLL':
+                    registers[instruction.args[0]] = args[1] << args[2];
+                    break;
                 case 'SETHI':
                     registers[instruction.args[0]] = args[1] << 10;
                     break;
