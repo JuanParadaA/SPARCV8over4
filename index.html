@@ -363,6 +363,15 @@ function executeInstruction(instruction) {
                     //registers[instruction.args[0]] = read_memory(args[1]);
                     read_memory(args[1],instruction.args[0]);
                     break;
+                case 'OR':
+                    registers[instruction.args[0]] = args[1] | args[2];
+                    break;
+                case 'XOR':
+                    registers[instruction.args[0]] = args[1] ^ args[2];
+                    break;
+                case 'XNOR':
+                    registers[instruction.args[0]] = ~(args[1] ^ args[2]);
+                    break;
                 case 'ST':
                     write_memory(args[0], args[1]);
                     break;
