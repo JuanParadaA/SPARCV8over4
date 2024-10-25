@@ -205,10 +205,13 @@ NOP
 
         function tokenize(code) {
             return code
-                .replace(/,\s*/g, ',') // Remove extra spaces after commas
-                .split(/[\s,]+/) // Split by any whitespace
-                .filter(token => token.length > 0); // Remove empty tokens
-                
+                .split('\n')  //Split code in lines
+                .map(line => line.split('#')[0])  //  Remove everything afer #
+                .map(line => line.split('//')[0])  //  Remove everything afer //
+                .join('\n')  // Join the lines
+                .replace(/,\s*/g, ',')  //  Remove extra spaces after comma
+                .split(/[\s,]+/)  // Split by spaces or commas
+                .filter(token => token.length > 0);  //Remove empty tokens  
         }
 
         function parse(tokens) {
