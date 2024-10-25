@@ -343,7 +343,7 @@ function executeInstruction(instruction) {
                 case 'ADD':
                     registers[instruction.args[0]] = args[1] + args[2];
                     break;
-               case 'SUB':
+                case 'SUB':
                     registers[instruction.args[0]] = no_flags(args[1] - args[2]);
                     break;
                 case 'SUBcc':
