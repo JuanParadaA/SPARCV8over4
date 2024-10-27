@@ -13,6 +13,7 @@
         }
         h1 {
             color: #333;
+            text-align: center;
         }
         textarea {
             width: 50%;
@@ -124,6 +125,26 @@
             width: 50%;
             align-items: center;
         }
+        .flags-container {
+            display: flex;
+            flex-direction: row; /* Alinea los elementos en fila */
+            justify-content: space-evenly; /* Espaciado uniforme entre elementos */
+            border: 1px solid black; /* Borde alrededor del contenedor */
+            padding: 5px;
+            background-color: #f9f9f9; /* Color de fondo suave */
+            width: 50%; /* Ajusta el ancho según tu diseño */
+            margin-top: 10px;
+        }
+
+        .flag {
+            display: inline-block;
+            padding: 10px;
+            border: 1px solid gray; /* Borde alrededor de cada flag */
+            text-align: center;
+            min-width: 50px; /* Asegura que cada flag tenga el mismo tamaño */
+            background-color: #e0e0e0; /* Color de fondo suave para cada flag */
+        }
+
     </style>
 </head>
 <body>
@@ -145,16 +166,29 @@ SUBcc R1,R1,1
 BzC -2
 NOP
     </textarea>
-    <div class=salida>
-        <h2>Simulation Output</h2>
-        <pre id="output"></pre>
-    </div>
 
+
+    <div class="salida">
+        <h2>Simulation Output</h2>
+        <div id="simulationOutput">
+            <pre id="output"></pre>
+        </div>
+    
+        <!-- Flags como fila -->
+        <div class="flags-container">
+            <span class="flag" id="flagC">C: 0</span>
+            <span class="flag" id="flagV">V: 0</span>
+            <span class="flag" id="flagN">N: 0</span>
+            <span class="flag" id="flagZ">Z: 0</span>
+        </div>
+        
+    </div>
+    
 </div>
     <br>
     <table>
         <thead>
-            <tr><th>Register</th><th>Value</th></tr>
+            <tr><th>Register</th><th>Decimal</th><th>Hexadecimal</th><th>Binario</th></tr>
         </thead>
         <tbody id="registerTable">
         </tbody>
@@ -197,8 +231,11 @@ NOP
             "malloc", "backend",
         ];
 
-        const registers = { R0: 0, R1: 0, R2: 0, R3: 0, R4: 0, R5: 0, R6: 0, R7: 0, R8: 0, R9: 0, R10: 0 , R11: 0 , R12: 0 };
-        let memory = registers//{R0: 0, R1: 0, R2: 0, R3: 0, R4: 0, R5: 0, R6: 0, R7: 0, R8: 0, R9: 0, R10: 0, R11: 0 , R12: 0 };
+        const registers = {};
+        for (let i = 0; i <= 12; i++) {
+            registers[`R${i}`] = 0;
+        }
+        let memory = registers;
 
         let parsed = [];
         let instructionPointer = 0;
@@ -416,12 +453,12 @@ NOP
                     registers['FLAG'] = args[0] - args[1];
                     break;
                 case 'BzS':
-                    if (registers['FLAG'] === 0) {
+                    if (registers['z'] === 1) {
                         return args[0];
                     }
                     break;
                 case 'BzC':
-                    if (registers['FLAG'] !== 0) {
+                    if (registers['z'] !== 1) {
                         return args[0];
                     }
                     break;
@@ -491,8 +528,10 @@ NOP
                 registers['n']=0;
                 registers['z']=0;
                 registers['v']=1;
+                
                 resultado= (resultado % 4294967296) + 4294967296;
             }
+            updateRegisters(registers);
             return resultado;
         }
 
@@ -535,9 +574,21 @@ NOP
             const table = document.getElementById('registerTable');
             table.innerHTML = '';
             for (const [reg, value] of Object.entries(registers)) {
-                table.innerHTML += `<tr><td>${reg}</td><td>${value}</td></tr>`;
+                let hexValue = value.toString(16); // Convertir a hexadecimal
+                let binaryValue = value.toString(2); // Convertir a binario
+                table.innerHTML += `<tr><td>${reg}</td><td>${value}</td><td>${hexValue}</td><td>${binaryValue}</td></tr>`;
             }
         }
+        function updateRegisters(registers) {
+            // Actualiza otros registros...
+
+            // Actualiza los valores de las flags
+            document.getElementById('flagC').textContent = 'C: ' + registers.c;
+            document.getElementById('flagV').textContent = 'V: ' + registers.v;
+            document.getElementById('flagN').textContent = 'N: ' + registers.n;
+            document.getElementById('flagZ').textContent = 'Z: ' + registers.z;
+        }
+
 
         function updateMemoryTextarea() {
         console.log('updateMemoryTextarea',memory)
