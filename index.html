@@ -397,7 +397,6 @@ NOP
 
             switch (instruction.op) {
                 case 'MOV':
-                    
                     registers[instruction.args[0]] = args[1];
                     break;
                 case 'LD':
@@ -406,6 +405,9 @@ NOP
                     break;
                 case 'OR':
                     registers[instruction.args[0]] = args[1] | args[2];
+                    break;
+                case 'ORN':
+                    registers[instruction.args[0]] = registers[instruction.args[1]] | (~args[2]);
                     break;
                 case 'XOR':
                     registers[instruction.args[0]] = args[1] ^ args[2];
