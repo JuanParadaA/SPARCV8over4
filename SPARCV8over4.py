@@ -344,11 +344,10 @@ function executeInstruction(instruction) {
                     registers[instruction.args[0]] = args[1] + args[2];
                     break;
                 case 'SUB':
-                    registers[instruction.args[0]] = args[1] - args[2];
+                    registers[instruction.args[0]] = no_flags(args[1] - args[2]);
                     break;
                 case 'SUBcc':
-                    registers[instruction.args[0]] = args[1] - args[2];
-                    registers['FLAG'] = args[1] - args[2];
+                    registers[instruction.args[0]] = flags(args[1] - args[2]);
                     break;
                 case 'SMUL':
                     registers[instruction.args[0]] = args[1] * args[2];
@@ -358,6 +357,9 @@ function executeInstruction(instruction) {
                     break;
                 case 'DEC':
                     registers[instruction.args[0]] -= 1;
+                    break;
+                case 'SLL':
+                    registers[instruction.args[0]] = args[1] << args[2];
                     break;
                 case 'SETHI':
                     registers[instruction.args[0]] = args[1] << 10;
@@ -400,6 +402,52 @@ function executeInstruction(instruction) {
             }
             return null;
         }
+                function no_flags(resultado){
+                    if (resultado >= 4294967296){ //2**32
+                        resultado= resultado % 4294967296;
+                    }else if (resultado<0 && resultado>(-2147483648)){
+                        resultado= (resultado % 4294967296) + 4294967296;
+                    }else if(resultado<=(-2147483648)){
+                        resultado(resultado % 4294967296) + 4294967296;
+                    }
+                    return resultado;
+                }
+                function flags(resultado){// los numeros de registers['resultado'] van entre o y (2**32) -1, es obligacion de cada uno revisar que la operacion se cumple bien cuando los valores de los registros estan con signo
+                    if (resultado >= 4294967296){ //2**32
+                        registers['c']=1;
+                        registers['n']=0;
+                        registers['z']=0;
+                        registers['v']=1;
+                        resultado = resultado % 4294967296;
+                    } else if (resultado>= 2147483648 && resultado< 4294967296){
+                        registers['c']=0;
+                        registers['n']=1;
+                        registers['z']=0;
+                        registers['v']=1;
+                    }else if (resultado<2147483648 && resultado >0){
+                        registers['c']=0;
+                        registers['v']=0;
+                        registers['n']=0;
+                        registers['z']=0;
+                    }else if (resultado==0){
+                        registers['z']=1;
+                        registers['c']=0;
+                        registers['n']=0;
+                        registers['v']=0; 
+                    }else if (resultado<0 && resultado>(-2147483648)){
+                        registers['c']=1;
+                        registers['n']=1;
+                        registers['z']=0;
+                        registers['v']=0;
+                    }else if(resultado<=(-2147483648)){
+                        registers['c']=1;
+                        registers['n']=0;
+                        registers['z']=0;
+                        registers['v']=1;
+                        resultado= (resultado % 4294967296) + 4294967296;
+                    }
+                    return resultado;
+                }
 """, """
 
         function step() {
