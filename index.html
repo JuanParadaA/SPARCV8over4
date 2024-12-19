@@ -143,7 +143,7 @@
             padding: 10px;
             border: 1px solid gray; /* Borde alrededor de cada flag */
             text-align: center;
-            min-width: 50px; /* Asegura que cada flag tenga el mismo tamaño */
+            min-width: 20px; /* Asegura que cada flag tenga el mismo tamaño */
             background-color: #e0e0e0; /* Color de fondo suave para cada flag */
         }
 
@@ -546,7 +546,7 @@ NOP
             if (instructionPointer < parsed.length) {
                 const output = 'Executing: '+parsed[instructionPointer].op + parsed[instructionPointer].args.join(", ")+'\\n';
                 
-                document.getElementById('output').textContent += output; 
+                document.getElementById('output').textContent = output; 
                 
                 const jump = executeInstruction(parsed[instructionPointer]);
                 if (jump !== null) {
@@ -569,7 +569,7 @@ NOP
 				let signedValue=value>=2**31?value-2**32:value;
                 let hexValue = (value >>> 0).toString(16).toUpperCase().padStart(8, '0'); // Convertir a hexadecimal
                 let binaryValue = (value >>> 0).toString(2).padStart(32, '0'); // Convertir a binario
-                table.innerHTML += `<tr><td>${reg}</td><td>${signedValue}</td><td>${value}</td><td>${hexValue}</td><td>${binaryValue}</td></tr>`;
+                table.innerHTML += `<tr><td>${reg}</td><td>${signedValue}</td><td>${(value >>> 0)}</td><td>${hexValue}</td><td>${binaryValue}</td></tr>`;
             }
         }
         function updateRegisters(registers) {
