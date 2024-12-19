@@ -44,10 +44,12 @@
             margin-top: 20px;
         }
         th, td {
+			font-family: monospace; 
             padding: 10px;
             text-align: left;
             border-bottom: 1px solid #ddd;
             border: 2px solid #888;
+			text-align: right;
         }
         th {
             background-color: #007BFF;
@@ -154,6 +156,23 @@
 <div class=ContainerText>
 
     <textarea id="codeInput" rows="15" cols="60">
+backend 0
+MOV R1,5
+SUBcc R2,R1,4
+SUBcc R2,R1,5
+SUBcc R2,R1,6
+ADDcc R2,R1,7
+SETHI R3,2000000
+SUBcc R2,R1,R3
+ADDcc R2,R1,R3
+SETHI R3,3000000
+SUBcc R2,R1,R3
+ADDcc R2,R1,R3
+SETHI R3,4194303
+ADDcc R2,R3,5
+ADDcc R2,R3,8191
+NOP
+NOP
 backend 1
 malloc R5,16
 MOV R1,5
@@ -188,7 +207,7 @@ NOP
     <br>
     <table>
         <thead>
-            <tr><th>Register</th><th>Decimal</th><th>Hexadecimal</th><th>Binario</th></tr>
+            <tr><th>Register</th><th>Signed</th><th>Unsigned</th><th>Hexadecimal</th><th>Binario</th></tr>
         </thead>
         <tbody id="registerTable">
         </tbody>
@@ -488,52 +507,23 @@ NOP
         }
 
         function no_flags(resultado){
-            if (resultado >= 4294967296){ //2**32
-                return resultado % 4294967296;
-            }else if (resultado<0 && resultado>(-2147483648)){
-                resultado= (resultado % 4294967296) + 4294967296;
-            }else if(resultado<=(-2147483648)){
-                resultado= (resultado % 4294967296) + 4294967296;
+			console.log("resultdo no flag in", resultado)
+			resultado = resultado % 2**32
+			if(resultado<0){
+                resultado+=  2**32;
             }
+			console.log("resultdo no flag out", resultado)
             return resultado;
         }
         function flags(resultado){// los numeros de registers['resultado'] van entre o y (2**32) -1, es obligacion de cada uno revisar que la operacion se cumple bien cuando los valores de los registros estan con signo
-            if (resultado >= 4294967296){ //2**32
-                registers['c']=1;
-                registers['n']=0;
-                registers['z']=0;
-                registers['v']=1;
-                return resultado % 4294967296;
-            } else if (resultado>= 2147483648 && resultado< 4294967296){
-                registers['c']=0;
-                registers['n']=1;
-                registers['z']=0;
-                registers['v']=1;
-            }else if (resultado<2147483648 && resultado>0){
-                registers['c']=0;
-                registers['v']=0;
-                registers['n']=0;
-                registers['z']=0;
-            }else if (resultado==0){
-                registers['z']=1;
-                registers['c']=0;
-                registers['n']=0;
-                registers['v']=0; 
-            }else if (resultado<0 && resultado>(-2147483648)){
-                registers['c']=1;
-                registers['n']=1;
-                registers['z']=0;
-                registers['v']=0;
-                resultado= (resultado % 4294967296) + 4294967296;
-            }else if(resultado<=(-2147483648)){
-                registers['c']=1;
-                registers['n']=0;
-                registers['z']=0;
-                registers['v']=1;
-                
-                resultado= (resultado % 4294967296) + 4294967296;
-            }
+			console.log("resultdo  flag in", resultado)
+            registers['c'] = (resultado >= 2**32) || (resultado < 0);
+			registers['v'] = (resultado >= 2**31) || (resultado < -(2**31));
+			resultado=no_flags(resultado);
+			registers['n'] = resultado >= 2**31;
+			registers['z'] = resultado == 0;
             updateRegisters(registers);
+			console.log("resultdo flag out", resultado)
             return resultado;
         }
 
@@ -576,9 +566,10 @@ NOP
             const table = document.getElementById('registerTable');
             table.innerHTML = '';
             for (const [reg, value] of Object.entries(registers)) {
-                let hexValue = value.toString(16); // Convertir a hexadecimal
-                let binaryValue = value.toString(2); // Convertir a binario
-                table.innerHTML += `<tr><td>${reg}</td><td>${value}</td><td>${hexValue}</td><td>${binaryValue}</td></tr>`;
+				let signedValue=value>=2**31?value-2**32:value;
+                let hexValue = (value >>> 0).toString(16).toUpperCase().padStart(8, '0'); // Convertir a hexadecimal
+                let binaryValue = (value >>> 0).toString(2).padStart(32, '0'); // Convertir a binario
+                table.innerHTML += `<tr><td>${reg}</td><td>${signedValue}</td><td>${value}</td><td>${hexValue}</td><td>${binaryValue}</td></tr>`;
             }
         }
         function updateRegisters(registers) {
@@ -593,7 +584,7 @@ NOP
 
 
         function updateMemoryTextarea() {
-        console.log('updateMemoryTextarea',memory)
+        //console.log('updateMemoryTextarea',memory)
             document.getElementById('memoryInput').value = JSON.stringify(memory, null, 4);
         }
 //Powered by ChatGPT
