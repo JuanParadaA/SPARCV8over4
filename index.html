@@ -467,13 +467,13 @@ NOP
                 case 'SLL':
                     registers[instruction.args[0]] = args[1] << args[2];
                     break;
-		case 'BCS':
-		    if (registers['c'] === 1) {
-			instructionPointer += args[0];
-		    	} else {
-			    instructionPointer++;
-		    	}
-		   	break;
+                case 'BCS':
+                    if (registers['c'] === 1) {
+                    instructionPointer += args[0];
+                        } else {
+                        instructionPointer++;
+                        }
+                    break;
                 case 'SETHI':
                     registers[instruction.args[0]] = args[1] << 10;
                     break;
@@ -498,10 +498,7 @@ NOP
                     break;
                 case 'NOP':
                     break;
-		case 'CALL':
-   			registers['%o7'] = instructionPointer + 1; 
-    			instructionPointer += args[0]; 
-    			break;
+
                 case 'malloc': //malloc Rd,  Cte
                         // malloc: Allocates a block of memory on the heap at runtime.
                         // Rd: Register that stores the address of the beginning of the allocated block.
