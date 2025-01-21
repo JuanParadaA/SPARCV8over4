@@ -425,6 +425,9 @@ NOP
                 case 'OR':
                     registers[instruction.args[0]] = args[1] | args[2];
                     break;
+                case 'ANDN':
+                    registers[instruction.args[0]] = registers[instruction.args[1]] & ~registers[instruction.args[2]];
+                    break;
                 case 'ORN':
                     registers[instruction.args[0]] = registers[instruction.args[1]] | (~args[2]);
                     break;
