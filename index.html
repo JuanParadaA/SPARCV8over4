@@ -463,6 +463,7 @@ NOP
                     break;
                 case 'SLL':
                     registers[instruction.args[0]] = args[1] << args[2];
+		    break;
 		case 'SRA':
                     registers[instruction.args[0]] = flags(args[1]/(2*args[2]));
                     break;
