@@ -499,8 +499,8 @@ NOP
                     instructionPointer = registers['R15'];
                     break;
 		case 'JMPL':
-	                registers[instruction.args[0]]=instructionPointer;
-	                instructionPointer = (args[1]+args[2])-1;
+	            registers[instruction.args[0]]=instructionPointer;
+	            instructionPointer = (args[1]+args[2])-1;
                 break;
                 case 'NOP':
                     break;
