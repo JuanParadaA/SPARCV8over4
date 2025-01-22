@@ -463,10 +463,10 @@ NOP
                     break;
                 case 'SLL':
                     registers[instruction.args[0]] = args[1] << args[2];
-		    break;
-		case 'SRA':
-                    registers[instruction.args[0]] = flags(args[1]/(2*args[2]));
                     break;
+		case 'SRL'
+		    registers[instruction.args[0]] = no_flags(args[1] >> args[2]);
+		    break;	    
                 case 'SETHI':
                     registers[instruction.args[0]] = args[1] << 10;
                     break;
