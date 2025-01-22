@@ -251,7 +251,7 @@ NOP
         ];
 
         const registers = {};
-        for (let i = 0; i <= 12; i++) {
+        for (let i = 0; i <= 15; i++) {
             registers[`R${i}`] = 0;
         }
         let memory = registers;
@@ -492,6 +492,10 @@ NOP
                 case 'BA':
                     return args[0];
                     break;
+		case 'CALL':
+		    registers['R15'] = instructionPointer + 1; // %o7
+		    instructionPointer = parseInt(args[0]) - 1;
+    		    break;
                 case 'NOP':
                     break;
                 case 'malloc': //malloc Rd,  Cte
