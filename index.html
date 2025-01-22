@@ -493,9 +493,8 @@ NOP
                     return args[0];
                     break;
 		case 'CALL':
-		    registers['R15'] = instructionPointer + 1; // %o7
-		    instructionPointer = parseInt(args[0]) - 1;
-    		    break;
+		    registers['R15'] = instructionPointer; // %o7
+                    return args[0];
                 case 'NOP':
                     break;
                 case 'malloc': //malloc Rd,  Cte
