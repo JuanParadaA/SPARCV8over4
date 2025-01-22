@@ -425,6 +425,9 @@ NOP
                 case 'OR':
                     registers[instruction.args[0]] = args[1] | args[2];
                     break;
+                case 'ANDN':
+                    registers[instruction.args[0]] = registers[instruction.args[1]] & ~registers[instruction.args[2]];
+                    break;
                 case 'ORN':
                     registers[instruction.args[0]] = registers[instruction.args[1]] | (~args[2]);
                     break;
@@ -467,9 +470,17 @@ NOP
                 case 'SLL':
                     registers[instruction.args[0]] = no_flags(args[1] << args[2]);
                     break;
-		case 'SRL':
-		    registers[instruction.args[0]] = no_flags(args[1] >> args[2]);
-		    break;	
+                case 'SRL':
+		                registers[instruction.args[0]] = no_flags(args[1] >> args[2]);
+		                break;	
+                case 'BCS':
+                    if (registers['c'] === 1) {
+                    instructionPointer += args[0];
+                        } else {
+                        instructionPointer++;
+                        }
+                    break;
+
                 case 'SETHI':
                     registers[instruction.args[0]] = args[1] << 10;
                     break;
@@ -492,18 +503,19 @@ NOP
                 case 'BA':
                     return args[0];
                     break;
-		case 'CALL':
-		    registers['R15'] = instructionPointer; // %o7
+		            case 'CALL':
+		                registers['R15'] = instructionPointer; // %o7
                     return args[0];
-	        case 'RETL':
+	              case 'RETL':
                     instructionPointer = registers['R15'];
                     break;
-		case 'JMPL':
-	            registers[instruction.args[0]]=instructionPointer;
-	            instructionPointer = (args[1]+args[2])-1;
-                break;
+		            case 'JMPL':
+	                  registers[instruction.args[0]]=instructionPointer;
+	                  instructionPointer = (args[1]+args[2])-1;
+                    break;
                 case 'NOP':
                     break;
+
                 case 'malloc': //malloc Rd,  Cte
                         // malloc: Allocates a block of memory on the heap at runtime.
                         // Rd: Register that stores the address of the beginning of the allocated block.
