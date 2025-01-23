@@ -482,10 +482,18 @@ NOP
                         instructionPointer++;
                         }
                     break;
+                case 'BNEG':
+                        if (registers['n'] === 1) { 
+                          instructionPointer += args[0]; // Realiza un salto relativo si N es 1
+                        } else {
+                          instructionPointer++;
+                        }
+                        break;
                 case 'BGE':
                     if (registers['FLAG'] >= 0) {
                         return args[0];
-                }
+                      }
+                     break;
                 case 'SETHI':
                     registers[instruction.args[0]] = args[1] << 10;
                     break;
@@ -515,6 +523,10 @@ NOP
                     break;
                 case 'NOP':
                     break;
+                case 'RET':
+                        instructionPointer = registers['%o7'] + 2; // `%o7 + 8` equivale a avanzar 2 posiciones porque las instrucciones son de 4 bytes
+                        break;
+
                 case 'malloc': //malloc Rd,  Cte
                         // malloc: Allocates a block of memory on the heap at runtime.
                         // Rd: Register that stores the address of the beginning of the allocated block.
