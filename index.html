@@ -527,11 +527,9 @@ NOP
                     {
                         // Guarda la dirección de retorno en %o7
                         registers['o7'] = registers['PC'] + 4; // PC apunta a la instrucción siguiente
-                
                         // Calcula el salto relativo basado en cte30
-                        const cte30 = args[0]; // Valor del salto relativo
-                        registers['PC'] += cte30 * 4; // Salto relativo: cte30 multiplicado por 4
-                
+                        const cte30 = args[0]; // Valor del salto 
+                        registers['PC'] += cte30 * 4; // Salto: cte30 multiplicado por 4
                         // Sincroniza instructionPointer con el nuevo PC
                         instructionPointer = registers['PC'] / 4;
                     }
@@ -540,7 +538,6 @@ NOP
                     {
                         // Recupera la dirección de retorno desde %o7
                         const returnAddress = registers['o7'] + 8; // Dirección de retorno ajustada
-                
                         // Sincroniza PC e instructionPointer
                         registers['PC'] = returnAddress;
                         instructionPointer = Math.floor(returnAddress / 4);
