@@ -521,6 +521,27 @@ NOP
                     instructionPointer += args[0]; // Salta a la dirección relativa
                     }
                     break;
+                case 'BNE':
+                    if (registers['z'] !== 1) {
+                        return args[0]; 
+                    }
+                    break;
+                case 'BVS':
+                    if (registers['v'] === 1) {
+                        return args[0]; 
+                    }
+                    break;
+                case 'CALL':
+                    registers.o7 = instructionPointer;
+                    instructionPointer = instructionPointer+(4*args[0])
+                    break;
+                case 'RETL':
+                    instructionPointer = registers.o7 + 8; // Actualiza el puntero de instrucción sumando 8 al valor de %o7
+                    break;
+                case 'JUMPL':
+                    registers[instruction.args[0]] = args[1] + args[2]; // Calcula la dirección de salto y la almacena en el registro destino
+                    instructionPointer = registers[instruction.args[0]]; // Actualiza el puntero de instrucción con la nueva dirección
+                    break;
                 case 'NOP':
                     break;
 
