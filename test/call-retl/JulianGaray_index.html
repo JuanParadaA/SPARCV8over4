@@ -251,7 +251,7 @@ NOP
         ];
 
         const registers = {};
-        for (let i = 0; i <= 12; i++) {
+        for (let i = 0; i <= 15; i++) {
             registers[`R${i}`] = 0;
         }
         let memory = registers;
@@ -419,7 +419,6 @@ NOP
                     registers[instruction.args[0]] = args[1];
                     break;
                 case 'LD':
-                    //registers[instruction.args[0]] = read_memory(args[1]);
                     read_memory(args[1],instruction.args[0]);
                     break;
                 case 'OR':
@@ -464,9 +463,15 @@ NOP
                 case 'DEC':
                     registers[instruction.args[0]] -= 1;
                     break;
-                case 'SLL':
-                    registers[instruction.args[0]] = args[1] << args[2];
+                case 'SRA':
+                    registers[instruction.args[0]] = flags(args[1]/(2*args[2]));
                     break;
+                case 'SLL':
+                    registers[instruction.args[0]] = no_flags(args[1] << args[2]);
+                    break;
+                case 'SRL':
+                    registers[instruction.args[0]] = no_flags(args[1] >> args[2]);
+                    break;	
                 case 'BCS':
                     if (registers['c'] === 1) {
                     instructionPointer += args[0];
@@ -474,6 +479,10 @@ NOP
                         instructionPointer++;
                         }
                     break;
+                case 'BGE':
+                    if (registers['FLAG'] >= 0) {
+                        return args[0];
+                }
                 case 'SETHI':
                     registers[instruction.args[0]] = args[1] << 10;
                     break;
@@ -496,6 +505,22 @@ NOP
                 case 'BA':
                     return args[0];
                     break;
+                case 'BVC':
+                    if (registers['v'] === 0) { // Si la bandera 'v' está limpia
+                    instructionPointer += args[0]; // Salta a la dirección relativa
+                    }
+                    break;
+
+                //Test
+                case 'CALL':
+                    registers['LR'] = instruction.address + 1;
+                    return args[0];
+                    break;
+                case 'RET':
+                    return registers['LR'];
+                    break;
+                //
+
                 case 'NOP':
                     break;
                 case 'malloc': //malloc Rd,  Cte
@@ -512,28 +537,10 @@ NOP
                     break;
                 default:
                     console.log(`Unknown instruction: ${instruction.op}`);
-                case 'BVC':
-                    if (registers['v'] === 0) { // Si la bandera 'v' está limpia
-                    instructionPointer += args[0]; // Salta a la dirección relativa
-                    }
-                    break;
-
-                //Test
-                case 'CALL':
-                // Guardar la dirección de retorno (la siguiente instrucción) en R15
-                    registers['R15'] = instructionPointer + 1;
-                    // Verificar si el argumento es un registro o un valor directo
-                    if (instruction.args[0].startsWith('R')) {
-                        instructionPointer = registers[instruction.args[0]]; // Usar el valor en el registro
-                            } else {
-                        instructionPointer = parseInt(args[0], 10); // Usar valor directo como dirección
-                    }
-                     // Mensaje de depuración
-                        console.log(`CALL: Retorno en R15=${registers['R15']}, salto a ${instructionPointer}`);
-                        return null; // Evitar que se incremente automáticamente el puntero
             }
             return null;
         }
+
         function no_flags(resultado){
 			console.log("resultdo no flag in", resultado)
 			resultado = resultado % 2**32
@@ -567,7 +574,7 @@ NOP
                 const memoryInput = document.getElementById('memoryInput').value;
                 for (let i = 100; i < 116; i=i+4) {
                     memory[i] = i+1000;
-                   }
+                }
                 //memory = memoryInput.split(',').map(Number); // Initialize memory from textarea
             }
 
