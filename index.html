@@ -422,6 +422,14 @@ NOP
                     //registers[instruction.args[0]] = read_memory(args[1]);
                     read_memory(args[1],instruction.args[0]);
                     break;
+                case 'AND':
+                    registers[instruction.args[0]]= registers[instruction.args[1]] & registers[instruction.args[2]];
+                    break;
+                case 'CALL':
+                    const returnAddress = instructionPointer + 1;
+                    registers['R15'] = returnAddress;
+                    instructionPointer = args[0];
+                    break;
                 case 'OR':
                     registers[instruction.args[0]] = args[1] | args[2];
                     break;
