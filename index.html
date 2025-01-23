@@ -502,6 +502,11 @@ NOP
                 case 'BA':
                     return args[0];
                     break;
+                case 'BVC':
+                    if (registers['v'] === 0) { // Si la bandera 'v' está limpia
+                    instructionPointer += args[0]; // Salta a la dirección relativa
+                    }
+                    break;
 
                 case 'NOP':
                     break;
