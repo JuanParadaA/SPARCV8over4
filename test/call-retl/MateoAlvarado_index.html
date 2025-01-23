@@ -502,8 +502,12 @@ NOP
                 //Test
                 case 'CALL':
                     registers['%o7'] = instructionPointer + 1; 
-                        instructionPointer += args[0]; 
-                        break;
+                    instructionPointer += args[0]; 
+                    break;
+                case 'RETL':
+                    instructionPointer = registers['%o7'] + 2; // `%o7 + 8` equivale a avanzar 2 posiciones porque las instrucciones son de 4 bytes
+                    break;
+                //
 
                         
                 case 'malloc': //malloc Rd,  Cte
