@@ -422,22 +422,22 @@ NOP
                     read_memory(args[1],instruction.args[0]);
                     break;
                 case 'AND':
-                    registers[instruction.args[0]]= registers[instruction.args[1]] & registers[instruction.args[2]];
+                    registers[instruction.args[0]]= no_flags(registers[instruction.args[1]] & registers[instruction.args[2]]);
                     break;
                 case 'OR':
                     registers[instruction.args[0]] = args[1] | args[2];
                     break;
                 case 'ANDN':
-                    registers[instruction.args[0]] = registers[instruction.args[1]] & ~registers[instruction.args[2]];
+                    registers[instruction.args[0]] = no_flags(registers[instruction.args[1]] & ~registers[instruction.args[2]]);
                     break;
                 case 'ORN':
                     registers[instruction.args[0]] = registers[instruction.args[1]] | (~args[2]);
                     break;
                 case 'XOR':
-                    registers[instruction.args[0]] = args[1] ^ args[2];
+                    registers[instruction.args[0]] = no_flags(args[1] ^ args[2]);
                     break;
                 case 'XNOR':
-                    registers[instruction.args[0]] = ~(args[1] ^ args[2]);
+                    registers[instruction.args[0]] = no_flags(~(args[1] ^ args[2]));
                     break;
                 case 'ST':
                     write_memory(args[0], args[1]);
