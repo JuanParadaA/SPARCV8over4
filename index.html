@@ -251,7 +251,7 @@ NOP
         ];
 
         const registers = {};
-        for (let i = 0; i <= 12; i++) {
+        for (let i = 0; i <= 15; i++) {
             registers[`R${i}`] = 0;
         }
         let memory = registers;
@@ -415,6 +415,7 @@ NOP
             });
 
             switch (instruction.op) {
+
     case 'MOV':
         registers[instruction.args[0]] = args[1];
         break;
@@ -520,6 +521,7 @@ NOP
         console.log(`Unknown instruction: ${instruction.op}`);
 }
 return null;
+
         }
 
         function no_flags(resultado){
@@ -555,7 +557,7 @@ return null;
                 const memoryInput = document.getElementById('memoryInput').value;
                 for (let i = 100; i < 116; i=i+4) {
                     memory[i] = i+1000;
-                   }
+                }
                 //memory = memoryInput.split(',').map(Number); // Initialize memory from textarea
             }
 
