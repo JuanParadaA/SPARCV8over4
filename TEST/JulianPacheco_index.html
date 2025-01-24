@@ -413,6 +413,7 @@ NOP
                     return parseInt(arg, 10);
                 }
             });
+            let pcIncrement = 1;
 
             switch (instruction.op) {
                 case 'MOV':
@@ -542,21 +543,26 @@ NOP
                     instructionPointer += args[0]; // Salta a la dirección relativa
                     }
                     break;
+
+                case 'BE': // Brinca si son iguales
+                    if (registers['Z'] === 1) {
+                        pcIncrement = args[0]; // Salto relativo
+                    }
+                    break;
+
+                case 'BLE': // Brinca si es menor o igual
+                    if (registers['Z'] === 1 || (registers['N'] ^ registers['V']) === 1) {
+                        pcIncrement = args[0]; // Salto relativo
+                    }
+                    break;
+
+                case 'BL': // Brinca si es menor
+                    if ((registers['N'] ^ registers['V']) === 1) {
+                        pcIncrement = args[0]; // Salto relativo
+                    }
+                    break;
+
                 case 'NOP':
-                    break;
-
-
-                //Test
-                case 'CALL': // Damyan Leonardo Leon Gaona
-                registers['%o7'] = instructionPointer + 2; // Guarda la dirección de retorno en %o7
-                instructionPointer = args[0]; // Salta a la subrutina
-                    break;
-                case 'JMPL': // Laura Sofia Ramirez Laiton
-                registers[instruction.args[0]] = instructionPointer; // Guarda la dirección actual en rd
-                instructionPointer = args[1] + args[2]; // Salta a la nueva dirección
-                    break;
-                case 'RET': // Helder Andrés Rodríguez Roser
-                instructionPointer = registers['%o7'] + 2; // %o7 + 8 equivale a avanzar 2 posiciones porque las instrucciones son de 4 bytes
                     break;
 
                 case 'malloc': //malloc Rd,  Cte
@@ -571,6 +577,29 @@ NOP
                     sw_back.checked=Boolean(args[0])
                     console.log('backend',sw_back.checked)
                     break;
+
+        //Test
+        case 'CALL': // Llamado a rutina
+            registers['R15'] = registers['PC']; // Guardar la dirección actual en R15 (simulando o7)
+            pcIncrement = args[0]; // Salto relativo
+            break;
+
+        case 'RETURN': // Retorno de rutina
+            pcIncrement = 0; // Evita que aumente el contador normalmente
+            registers['PC'] = registers['R15'] + 8; // Regresa al valor almacenado en R15 + 8
+            break;
+
+        case 'JMPL': // Salto con registros
+            const jumpTarget = registers[instruction.args[0]] + registers[instruction.args[1]];
+            registers[instruction.args[2]] = registers['PC']; // Guardar la dirección actual
+            registers['PC'] = jumpTarget; // Salto absoluto
+            pcIncrement = 0; // Evita el incremento por defecto
+            break;
+
+
+
+                
+        
                 default:
                     console.log(`Unknown instruction: ${instruction.op}`);
             }

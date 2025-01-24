@@ -543,6 +543,25 @@ NOP
                     instructionPointer += args[0]; // Salta a la dirección relativa
                     }
                     break;
+
+                case 'BE': // Brinca si son iguales
+                    if (registers['Z'] === 1) {
+                        pcIncrement = args[0]; // Salto relativo
+                    }
+                    break;
+
+                case 'BLE': // Brinca si es menor o igual
+                    if (registers['Z'] === 1 || (registers['N'] ^ registers['V']) === 1) {
+                        pcIncrement = args[0]; // Salto relativo
+                    }
+                    break;
+
+                case 'BL': // Brinca si es menor
+                    if ((registers['N'] ^ registers['V']) === 1) {
+                        pcIncrement = args[0]; // Salto relativo
+                    }
+                    break;
+
                 case 'NOP':
                     break;
 
@@ -558,42 +577,6 @@ NOP
                     sw_back.checked=Boolean(args[0])
                     console.log('backend',sw_back.checked)
                     break;
-                case 'BE': // Brinca si son iguales
-            if (registers['Z'] === 1) {
-                pcIncrement = args[0]; // Salto relativo
-            }
-            break;
-
-        case 'BLE': // Brinca si es menor o igual
-            if (registers['Z'] === 1 || (registers['N'] ^ registers['V']) === 1) {
-                pcIncrement = args[0]; // Salto relativo
-            }
-            break;
-
-        case 'BL': // Brinca si es menor
-            if ((registers['N'] ^ registers['V']) === 1) {
-                pcIncrement = args[0]; // Salto relativo
-            }
-            break;
-
-        case 'CALL': // Llamado a rutina
-            registers['R15'] = registers['PC']; // Guardar la dirección actual en R15 (simulando o7)
-            pcIncrement = args[0]; // Salto relativo
-            break;
-
-        case 'RETURN': // Retorno de rutina
-            pcIncrement = 0; // Evita que aumente el contador normalmente
-            registers['PC'] = registers['R15'] + 8; // Regresa al valor almacenado en R15 + 8
-            break;
-
-        case 'JMPL': // Salto con registros
-            const jumpTarget = registers[instruction.args[0]] + registers[instruction.args[1]];
-            registers[instruction.args[2]] = registers['PC']; // Guardar la dirección actual
-            registers['PC'] = jumpTarget; // Salto absoluto
-            pcIncrement = 0; // Evita el incremento por defecto
-            break;
-
-
 
                 
         
