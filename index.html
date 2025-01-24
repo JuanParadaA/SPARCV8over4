@@ -192,7 +192,9 @@ NOP
         <div id="simulationOutput">
             <pre id="output"></pre>
         </div>
-    
+        <div class="flags-container">
+            <p id="o7">o7 : </p>
+        </div>
         <!-- Flags como fila -->
         <div class="flags-container">
             <span class="flag" id="flagC">C: 0</span>
@@ -250,7 +252,7 @@ NOP
             "malloc", "backend",
         ];
 
-        const registers = {};
+        const registers = {o7:null};
         for (let i = 0; i <= 15; i++) {
             registers[`R${i}`] = 0;
         }
@@ -659,6 +661,7 @@ NOP
 
         function updateRegisterTable() {
             const table = document.getElementById('registerTable');
+            document.getElementById("o7").textContent = "%o7:" +registers.o7;
             table.innerHTML = '';
             for (const [reg, value] of Object.entries(registers)) {
 				let signedValue=value>=2**31?value-2**32:value;
