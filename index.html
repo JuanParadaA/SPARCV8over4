@@ -482,6 +482,27 @@ NOP
                         instructionPointer++;
                         }
                     break;
+                case 'BGU': // Laura Sofía Ramirez Laiton
+                   if (registers['c'] === 0 && registers['z'] === 0) {
+                        instructionPointer += args[0]; // Salta si C = 0 y Z = 0
+                   } else {
+                        instructionPointer++;
+                   }
+                    break;
+                case 'BCC': // Damyan Leonardo Leon Gaona
+                   if (registers['c'] === 0) {
+                       instructionPointer += args[0]; // Salta si C = 0
+                    } else {
+                        instructionPointer++;
+                    }
+                   break;
+                case 'BPOS': // Helder Andrés Rodríguez Rosero
+                    if (registers['n'] === 0) {
+                        instructionPointer += args[0]; // Salta si N = 0, lo que significa que el número es positivo
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
                 case 'BNEG':
                     if (registers['n'] === 1) { 
                         instructionPointer += args[0]; // Realiza un salto relativo si N es 1
@@ -523,6 +544,17 @@ NOP
                     break;
                 case 'NOP':
                     break;
+		case 'CALL': // Damyan Leonardo Leon Gaona
+  		  registers['%o7'] = instructionPointer + 2; // Guarda la dirección de retorno en %o7
+   		 instructionPointer = args[0]; // Salta a la subrutina
+		    break;
+		case 'JMPL': // Laura Sofia Ramirez Laiton
+  		  registers[instruction.args[0]] = instructionPointer; // Guarda la dirección actual en rd
+  		  instructionPointer = args[1] + args[2]; // Salta a la nueva dirección
+  		  break;
+		case 'RET': // Helder Andrés Rodríguez Roser
+  		  instructionPointer = registers['%o7'] + 2; // %o7 + 8 equivale a avanzar 2 posiciones porque las instrucciones son de 4 bytes
+ 		   break;
 
                 case 'malloc': //malloc Rd,  Cte
                         // malloc: Allocates a block of memory on the heap at runtime.
