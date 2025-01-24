@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assembler Code Step Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        textarea {
+            width: 50%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            background-color: #f0f0f0;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 10px 0;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+			font-family: monospace; 
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            border: 2px solid #888;
+			text-align: right;
+        }
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+        td {
+            background-color: #fff;
+        }
+        #memory-container {
+            margin-top: 20px;
+        }
+        #output {
+
+            background-color: #eef2f7;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 50px;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+        #backend-switch {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 20px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #007BFF;
+        }
+        input:checked + .slider:before {
+            transform: translateX(14px);
+        }
+        .ContainerText {
+            display: flex;
+            gap:10px;
+        }
+        .salida{
+            display : flex;
+            flex-direction: column;
+            justify-content: center;
+            border : solid 2px #181C14;
+            width: 50%;
+            align-items: center;
+        }
+        .flags-container {
+            display: flex;
+            flex-direction: row; /* Alinea los elementos en fila */
+            justify-content: space-evenly; /* Espaciado uniforme entre elementos */
+            border: 1px solid black; /* Borde alrededor del contenedor */
+            padding: 5px;
+            background-color: #f9f9f9; /* Color de fondo suave */
+            width: 50%; /* Ajusta el ancho según tu diseño */
+            margin-top: 10px;
+        }
+
+        .flag {
+            display: inline-block;
+            padding: 10px;
+            border: 1px solid gray; /* Borde alrededor de cada flag */
+            text-align: center;
+            min-width: 20px; /* Asegura que cada flag tenga el mismo tamaño */
+            background-color: #e0e0e0; /* Color de fondo suave para cada flag */
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Assembler Code Step Simulator</h1>
+    <button onclick="step()"  id="btn_step">Step</button>
+
+<div class=ContainerText>
+
+    <textarea id="codeInput" rows="15" cols="60">
+backend 0
+MOV R1,5
+SUBcc R2,R1,4
+SUBcc R2,R1,5
+SUBcc R2,R1,6
+ADDcc R2,R1,7
+SETHI R3,2000000
+SUBcc R2,R1,R3
+ADDcc R2,R1,R3
+SETHI R3,3000000
+SUBcc R2,R1,R3
+ADDcc R2,R1,R3
+SETHI R3,4194303
+ADDcc R2,R3,5
+ADDcc R2,R3,8191
+NOP
+NOP
+backend 1
+malloc R5,16
+MOV R1,5
+SETHI R2,3407872
+ST [R2+172],31744
+ST [R2+136],R1
+ST [R2+128],R0
+LD R3,[R2+148]
+SUBcc R1,R1,1
+BzC -2
+NOP
+    </textarea>
+
+
+    <div class="salida">
+        <h2>Simulation Output</h2>
+        <div id="simulationOutput">
+            <pre id="output"></pre>
+        </div>
+    
+        <!-- Flags como fila -->
+        <div class="flags-container">
+            <span class="flag" id="flagC">C: 0</span>
+            <span class="flag" id="flagV">V: 0</span>
+            <span class="flag" id="flagN">N: 0</span>
+            <span class="flag" id="flagZ">Z: 0</span>
+        </div>
+        
+    </div>
+    
+</div>
+    <br>
+    <table>
+        <thead>
+            <tr><th>Register</th><th>Signed</th><th>Unsigned</th><th>Hexadecimal</th><th>Binario</th></tr>
+        </thead>
+        <tbody id="registerTable">
+        </tbody>
+    </table>
+
+
+
+
+<div id="memory-container">
+    <!--input type="text" id="memory_address" placeholder="Memory Address"/-->
+    <div id="backend-switch">
+        <label class="switch">
+            <input type="checkbox" id="backend-checkbox">
+            <span class="slider"></span>
+        </label>
+        <span id="backend-text">Backend</span>
+    </div>
+</div> 
+    
+    <h2>Memory </h2>
+<textarea id="memoryInput" rows="10" cols="60">  </textarea>
+
+
+        
+        <script>
+        const sw_back = document.getElementById("backend-checkbox");
+        //const txt_back = document.getElementById("backend-text");
+        const btn_step = document.getElementById("btn_step");
+        
+        const instructions = [
+            "ADD", "AND", "OR", "XOR", "SUB", "ANDN", "ORN", "XNOR", "ADDX", "UMUL", "SMUL", "SUBX", "UDIV", "SDIV",
+            "ADDcc", "ANDcc", "ORcc", "XORcc", "SUBcc", "ANDNcc", "ORNcc", "XNORcc", "ADDXcc", "UMULcc", "SMULcc", "SUBXcc", "UDIVcc", "SDIVcc",
+            "SLL", "SRL", "SRA",
+            "LD", "ST",
+            "BN", "BE", "BLE", "BL", "BLEU", "BCS", "BNEG", "BVS", "BA", "BNE", "BG", "BGE", "BGU", "BCC", "BPOS", "BVC",
+            "CALL", "RETL", "JMPL",
+            "SETHI",
+            "NOP", "MOV", "CMP", "TST", "NOT", "NEG", "INC", "DEC", "CLR",
+            "BnS", "BnC", "BzS", "BzC", "BcS", "BcC", "BvS", "BvC",
+            "malloc", "backend",
+        ];
+
+        const registers = {};
+        for (let i = 0; i <= 15; i++) {
+            registers[`R${i}`] = 0;
+        }
+        let memory = registers;
+
+        let parsed = [];
+        let instructionPointer = 0;
+
+        function tokenize(code) {
+            return code
+                .split('\n')  //Split code in lines
+                .map(line => line.split('#')[0])  //  Remove everything afer #
+                .map(line => line.split('//')[0])  //  Remove everything afer //
+                .join('\n')  // Join the lines
+                .replace(/,\s*/g, ',')  //  Remove extra spaces after comma
+                .split(/[\s,]+/)  // Split by spaces or commas
+                .filter(token => token.length > 0);  //Remove empty tokens  
+        }
+
+        function parse(tokens) {
+            const parsed = [];
+            let i = 0;
+
+            while (i < tokens.length) {
+                const token = tokens[i];
+
+                if (instructions.includes(token)) {
+                    const instruction = { op: token };
+                    i++;
+
+                    const args = [];
+                    while (i < tokens.length && !instructions.includes(tokens[i]) && tokens[i] !== 'NOP') {
+                        let arg = tokens[i].replace(/,$/, '');
+
+                        if (arg.startsWith('[') && arg.endsWith(']')) {
+                            arg = arg.slice(1, -1); // Remove brackets
+                            if (arg.includes('+')) {
+                                args.push(`[${arg}]`);
+                            } else {
+                                args.push(arg);
+                            }
+                        } else {
+                            args.push(arg);
+                        }
+
+                        i++;
+                    }
+                    instruction.args = args;
+                    parsed.push(instruction);
+                } else {
+                    i++;
+                }
+            }
+            return parsed;
+        }
+
+
+        function sendJson(jsonData) {
+            btn_step.style.color = "black"
+            btn_step.textContent  = "Wait";
+            //btn_step.onclick = "";
+            console.log('sendJson')
+            const queryString = new URLSearchParams(jsonData).toString();
+
+            fetch(`/api?${queryString}`)
+                .then(response => response.json())  // Expecting a JSON response
+                .then(data => {
+                    console.log('sendJson',data);
+                    btn_step.style.color = "black";
+                    btn_step.textContent  = "Step";
+                    //btn_step.onclick = "step()";
+                    
+                   
+                    for (const [key, value] of Object.entries(data)) {
+                        console.log(`Key: ${key}, Value: ${value}`);
+                        memory[key]=parseInt(value)
+                    }
+                })
+                .catch(error => console.error('sendJson Error:', error));
+        }
+        
+        function read_memory(address,rd){
+            if (address % 4 !== 0) {
+                throw new Error(`The address ${address} is not divisible by 4.`);
+            }
+            if (sw_back.checked) {
+                //console.log('malloc..2')
+                const jsonData = {
+                    read_memory: [address,rd],
+                    //rd:rd
+                    //key2b: "value2b",
+                    //key3c: "value3c"
+                };
+
+                sendJson(jsonData)
+                //...
+                //...
+            } else{
+                if (!(memory.hasOwnProperty(address))){
+                            memory[address] = parseInt(prompt("Value of memory "+address, "0")); 
+                        }
+                return memory[address];
+            }
+        }
+
+        function write_memory(address,data){
+            if (address % 4 !== 0) {
+                throw new Error('The address '+address+'     is not divisible by 4.     ');
+            }
+            if (sw_back.checked) {
+                //console.log('malloc..2')
+                const jsonData = {
+                    write_memory: [address,data],
+                    //key2b: "value2b",
+                    //key3c: "value3c"
+                };
+
+                sendJson(jsonData)
+                //...
+            } else{
+                memory[address] = data; 
+            }
+        }
+        function malloc(num_bytes,rd){
+            if (num_bytes % 4 !== 0) {
+                throw new Error(`The number ${num_bytes} is not divisible by 4.`);
+            }
+            console.log('malloc..1a')
+            if (sw_back.checked) {
+                
+                const jsonData = {
+                    malloc: [num_bytes,rd],
+                    //rd,rd
+                    //key2b: "value2b",
+                    //key3c: "value3c"
+                };
+                console.log('malloc..2',jsonData)
+                sendJson(jsonData)
+            } else{
+                address=parseInt(prompt("Address of memory ", "0"));
+                for (var i = 0; i < num_bytes; i=i+4) {
+                    memory[address+i] = 0; 
+                }
+            }
+        }
+        
+
+
+        function executeInstruction(instruction) {
+            const args = instruction.args.map(arg => {
+                if (arg.startsWith('[')) {
+                    const parts = arg.slice(1, -1).split('+');
+                    const regValue = registers[parts[0]];
+                    const offset = parts[1] ? parseInt(parts[1], 10) : 0;
+                    return regValue + offset;
+                //} else if (registers.hasOwnProperty(arg)) {
+                } else if (arg.startsWith('R')) {    
+                    return registers[arg];
+                } else {
+                    return parseInt(arg, 10);
+                }
+            });
+
+            switch (instruction.op) {
+                case 'MOV':
+                    registers[instruction.args[0]] = args[1];
+                    break;
+                case 'LD':
+                    read_memory(args[1],instruction.args[0]);
+                    break;
+                case 'AND':
+                    registers[instruction.args[0]]= no_flags(registers[instruction.args[1]] & registers[instruction.args[2]]);
+                    break;
+                case 'OR':
+                    registers[instruction.args[0]] = args[1] | args[2];
+                    break;
+                case 'ANDN':
+                    registers[instruction.args[0]] = no_flags(registers[instruction.args[1]] & ~registers[instruction.args[2]]);
+                    break;
+                case 'ORN':
+                    registers[instruction.args[0]] = registers[instruction.args[1]] | (~args[2]);
+                    break;
+                case 'XOR':
+                    registers[instruction.args[0]] = no_flags(args[1] ^ args[2]);
+                    break;
+                case 'XNOR':
+                    registers[instruction.args[0]] = no_flags(~(args[1] ^ args[2]));
+                    break;
+                case 'ST':
+                    write_memory(args[0], args[1]);
+                    break;
+                case 'ADD':
+                    registers[instruction.args[0]] = no_flags(args[1] + args[2]);
+                    break;
+                case 'ADDcc':
+                    registers[instruction.args[0]] = flags(args[1] + args[2]);
+                    break;
+                case 'SUB':
+                registers[instruction.args[0]] = no_flags(args[1] - args[2]);
+                    break;
+                case 'SUBcc':
+                    registers[instruction.args[0]] = flags(args[1] - args[2]);
+                    break;
+                case 'SMUL':
+                    registers[instruction.args[0]] = no_flags(args[1] * args[2]);
+                    break;
+                case 'SMULcc':
+                    registers[instruction.args[0]] = flags(args[1] * args[2]);
+                    break;
+                case 'INC':
+                    registers[instruction.args[0]] += 1;
+                    break;
+                case 'DEC':
+                    registers[instruction.args[0]] -= 1;
+                    break;
+                case 'SRA':
+                    registers[instruction.args[0]] = flags(args[1]/(2*args[2]));
+                    break;
+                case 'SLL':
+                    registers[instruction.args[0]] = no_flags(args[1] << args[2]);
+                    break;
+                case 'SRL':
+                    registers[instruction.args[0]] = no_flags(args[1] >> args[2]);
+                    break;	
+                case 'BCS':
+                    if (registers['c'] === 1) {
+                    instructionPointer += args[0];
+                        } else {
+                        instructionPointer++;
+                        }
+                    break;
+                case 'BGU': // Laura Sofía Ramirez Laiton
+                    if (registers['c'] === 0 && registers['z'] === 0) {
+                        instructionPointer += args[0]; // Salta si C = 0 y Z = 0
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
+                case 'BCC': // Damyan Leonardo Leon Gaona
+                    if (registers['c'] === 0) {
+                       instructionPointer += args[0]; // Salta si C = 0
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
+                case 'BPOS': // Helder Andrés Rodríguez Rosero
+                    if (registers['n'] === 0) {
+                        instructionPointer += args[0]; // Salta si N = 0, lo que significa que el número es positivo
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
+                case 'BNEG':
+                    if (registers['n'] === 1) { 
+                        instructionPointer += args[0]; // Realiza un salto relativo si N es 1
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
+                case 'BGE':
+                    if (registers['FLAG'] >= 0) {
+                        return args[0];
+                    }
+                    break;
+                case 'SETHI':
+                    registers[instruction.args[0]] = args[1] << 10;
+                    break;
+                case 'CLR':
+                    registers[instruction.args[0]] = 0;
+                    break;
+                case 'CMP':
+                    registers['FLAG'] = args[0] - args[1];
+                    break;
+                case 'BzS':
+                    if (registers['z'] === 1) {
+                        return args[0];
+                    }
+                    break;
+                case 'BzC':
+                    if (registers['z'] !== 1) {
+                        return args[0];
+                    }
+                    break;
+                case 'BA':
+                    return args[0];
+                    break;
+                case 'BVC':
+                    if (registers['v'] === 0) { // Si la bandera 'v' está limpia
+                    instructionPointer += args[0]; // Salta a la dirección relativa
+                    }
+                    break;
+                case 'NOP':
+                    break;
+                case 'CALL': // Damyan Leonardo Leon Gaona
+                registers['%o7'] = instructionPointer + 2; // Guarda la dirección de retorno en %o7
+                instructionPointer = args[0]; // Salta a la subrutina
+                    break;
+                case 'JMPL': // Laura Sofia Ramirez Laiton
+                registers[instruction.args[0]] = instructionPointer; // Guarda la dirección actual en rd
+                instructionPointer = args[1] + args[2]; // Salta a la nueva dirección
+                    break;
+                case 'RET': // Helder Andrés Rodríguez Roser
+                instructionPointer = registers['%o7'] + 2; // %o7 + 8 equivale a avanzar 2 posiciones porque las instrucciones son de 4 bytes
+                    break;
+
+                case 'malloc': //malloc Rd,  Cte
+                        // malloc: Allocates a block of memory on the heap at runtime.
+                        // Rd: Register that stores the address of the beginning of the allocated block.
+                        // Cte: The number of bytes to allocate, which must be a multiple of 4 to ensure proper 4 bytes memory alignment.
+                    console.log('malloc')
+                    malloc(args[1],instruction.args[0])
+                    break;
+                case 'backend': //backend 0; backend 1
+                    console.log('backend',sw_back.checked)
+                    sw_back.checked=Boolean(args[0])
+                    console.log('backend',sw_back.checked)
+                    break;
+                default:
+                    console.log(`Unknown instruction: ${instruction.op}`);
+            }
+            return null;
+        }
+
+        function no_flags(resultado){
+			console.log("resultdo no flag in", resultado)
+			resultado = resultado % 2**32
+			if(resultado<0){
+                resultado+=  2**32;
+            }
+			console.log("resultdo no flag out", resultado)
+            return resultado;
+        }
+        function flags(resultado){// los numeros de registers['resultado'] van entre o y (2**32) -1, es obligacion de cada uno revisar que la operacion se cumple bien cuando los valores de los registros estan con signo
+			console.log("resultdo  flag in", resultado)
+            registers['c'] = (resultado >= 2**32) || (resultado < 0);
+			registers['v'] = (resultado >= 2**31) || (resultado < -(2**31));
+			resultado=no_flags(resultado);
+			registers['n'] = resultado >= 2**31;
+			registers['z'] = resultado == 0;
+            updateRegisters(registers);
+			console.log("resultdo flag out", resultado)
+            return resultado;
+        }
+
+
+        function step() {
+            if (instructionPointer === 0) {
+                const code = document.getElementById('codeInput').value;
+                const tokens = tokenize(code);
+                console.log(tokens)
+                parsed = parse(tokens);
+                console.log(parsed)
+                
+                const memoryInput = document.getElementById('memoryInput').value;
+                for (let i = 100; i < 116; i=i+4) {
+                    memory[i] = i+1000;
+                }
+                //memory = memoryInput.split(',').map(Number); // Initialize memory from textarea
+            }
+
+            if (instructionPointer < parsed.length) {
+                const output = 'Executing: '+parsed[instructionPointer].op + parsed[instructionPointer].args.join(", ")+'\\n';
+                
+                document.getElementById('output').textContent = output; 
+                
+                const jump = executeInstruction(parsed[instructionPointer]);
+                if (jump !== null) {
+                    instructionPointer += jump;
+                } else {
+                    instructionPointer++;
+                }
+
+                updateRegisterTable();
+                updateMemoryTextarea();
+            } else {
+                document.getElementById('output').textContent += "Simulation complete.\\n";
+            }
+        }
+
+        function updateRegisterTable() {
+            const table = document.getElementById('registerTable');
+            table.innerHTML = '';
+            for (const [reg, value] of Object.entries(registers)) {
+				let signedValue=value>=2**31?value-2**32:value;
+                let hexValue = (value >>> 0).toString(16).toUpperCase().padStart(8, '0'); // Convertir a hexadecimal
+                let binaryValue = (value >>> 0).toString(2).padStart(32, '0'); // Convertir a binario
+                table.innerHTML += `<tr><td>${reg}</td><td>${signedValue}</td><td>${(value >>> 0)}</td><td>${hexValue}</td><td>${binaryValue}</td></tr>`;
+            }
+        }
+        function updateRegisters(registers) {
+            // Actualiza otros registros...
+
+            // Actualiza los valores de las flags
+            document.getElementById('flagC').textContent = 'C: ' + registers.c;
+            document.getElementById('flagV').textContent = 'V: ' + registers.v;
+            document.getElementById('flagN').textContent = 'N: ' + registers.n;
+            document.getElementById('flagZ').textContent = 'Z: ' + registers.z;
+        }
+
+
+        function updateMemoryTextarea() {
+        //console.log('updateMemoryTextarea',memory)
+            document.getElementById('memoryInput').value = JSON.stringify(memory, null, 4);
+        }
+//Powered by ChatGPT
+        </script>
+    </body>
+</html>
