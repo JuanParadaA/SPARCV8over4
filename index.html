@@ -467,9 +467,15 @@ NOP
                 case 'DEC':
                     registers[instruction.args[0]] -= 1;
                     break;
+                case 'BLEU':
+                    if (registers['c'] || registers['z']) {
+                        return args[0];
+                    }
+                    break;
                 case 'SRA':
                     registers[instruction.args[0]] = flags(args[1]/(2*args[2]));
                     break;
+
                 case 'SLL':
                     registers[instruction.args[0]] = no_flags(args[1] << args[2]);
                     break;
@@ -676,7 +682,8 @@ NOP
         //console.log('updateMemoryTextarea',memory)
             document.getElementById('memoryInput').value = JSON.stringify(memory, null, 4);
         }
-//Powered by ChatGPT
         </script>
     </body>
+
 </html>
+
