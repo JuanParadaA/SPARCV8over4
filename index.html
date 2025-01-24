@@ -413,6 +413,7 @@ NOP
                     return parseInt(arg, 10);
                 }
             });
+            let pcIncrement = 1;
 
             switch (instruction.op) {
                 case 'MOV':
@@ -482,6 +483,27 @@ NOP
                         instructionPointer++;
                         }
                     break;
+                case 'BGU': // Laura Sofía Ramirez Laiton
+                    if (registers['c'] === 0 && registers['z'] === 0) {
+                        instructionPointer += args[0]; // Salta si C = 0 y Z = 0
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
+                case 'BCC': // Damyan Leonardo Leon Gaona
+                    if (registers['c'] === 0) {
+                       instructionPointer += args[0]; // Salta si C = 0
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
+                case 'BPOS': // Helder Andrés Rodríguez Rosero
+                    if (registers['n'] === 0) {
+                        instructionPointer += args[0]; // Salta si N = 0, lo que significa que el número es positivo
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
                 case 'BNEG':
                     if (registers['n'] === 1) { 
                         instructionPointer += args[0]; // Realiza un salto relativo si N es 1
@@ -521,6 +543,7 @@ NOP
                     instructionPointer += args[0]; // Salta a la dirección relativa
                     }
                     break;
+
                 case 'BNE':
                     if (registers['z'] !== 1) {
                         return args[0]; 
@@ -542,6 +565,25 @@ NOP
                     registers[instruction.args[0]] = args[1] + args[2]; // Calcula la dirección de salto y la almacena en el registro destino
                     instructionPointer = registers[instruction.args[0]]; // Actualiza el puntero de instrucción con la nueva dirección
                     break;
+
+                case 'BE': // Brinca si son iguales
+                    if (registers['Z'] === 1) {
+                        pcIncrement = args[0]; // Salto relativo
+                    }
+                    break;
+
+                case 'BLE': // Brinca si es menor o igual
+                    if (registers['Z'] === 1 || (registers['N'] ^ registers['V']) === 1) {
+                        pcIncrement = args[0]; // Salto relativo
+                    }
+                    break;
+
+                case 'BL': // Brinca si es menor
+                    if ((registers['N'] ^ registers['V']) === 1) {
+                        pcIncrement = args[0]; // Salto relativo
+                    }
+                    break;
+
                 case 'NOP':
                     break;
 
@@ -557,6 +599,9 @@ NOP
                     sw_back.checked=Boolean(args[0])
                     console.log('backend',sw_back.checked)
                     break;
+
+                
+        
                 default:
                     console.log(`Unknown instruction: ${instruction.op}`);
             }
