@@ -89,6 +89,3 @@ def api( request_str):
             + response_json)
     print('api_out',response_str)
     return (response_str )
-
-
-     

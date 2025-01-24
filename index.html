@@ -251,7 +251,7 @@ NOP
         ];
 
         const registers = {};
-        for (let i = 0; i <= 12; i++) {
+        for (let i = 0; i <= 15; i++) {
             registers[`R${i}`] = 0;
         }
         let memory = registers;
@@ -308,7 +308,7 @@ NOP
         }
 
 
-       function sendJson(jsonData) {
+        function sendJson(jsonData) {
             btn_step.style.color = "black"
             btn_step.textContent  = "Wait";
             //btn_step.onclick = "";
@@ -328,7 +328,7 @@ NOP
                         console.log(`Key: ${key}, Value: ${value}`);
                         memory[key]=parseInt(value)
                     }
-                 })
+                })
                 .catch(error => console.error('sendJson Error:', error));
         }
         
@@ -419,23 +419,25 @@ NOP
                     registers[instruction.args[0]] = args[1];
                     break;
                 case 'LD':
-                    //registers[instruction.args[0]] = read_memory(args[1]);
                     read_memory(args[1],instruction.args[0]);
+                    break;
+                case 'AND':
+                    registers[instruction.args[0]]= no_flags(registers[instruction.args[1]] & registers[instruction.args[2]]);
                     break;
                 case 'OR':
                     registers[instruction.args[0]] = args[1] | args[2];
                     break;
                 case 'ANDN':
-                    registers[instruction.args[0]] = registers[instruction.args[1]] & ~registers[instruction.args[2]];
+                    registers[instruction.args[0]] = no_flags(registers[instruction.args[1]] & ~registers[instruction.args[2]]);
                     break;
                 case 'ORN':
                     registers[instruction.args[0]] = registers[instruction.args[1]] | (~args[2]);
                     break;
                 case 'XOR':
-                    registers[instruction.args[0]] = args[1] ^ args[2];
+                    registers[instruction.args[0]] = no_flags(args[1] ^ args[2]);
                     break;
                 case 'XNOR':
-                    registers[instruction.args[0]] = ~(args[1] ^ args[2]);
+                    registers[instruction.args[0]] = no_flags(~(args[1] ^ args[2]));
                     break;
                 case 'ST':
                     write_memory(args[0], args[1]);
@@ -464,9 +466,15 @@ NOP
                 case 'DEC':
                     registers[instruction.args[0]] -= 1;
                     break;
-                case 'SLL':
-                    registers[instruction.args[0]] = args[1] << args[2];
+                case 'SRA':
+                    registers[instruction.args[0]] = flags(args[1]/(2*args[2]));
                     break;
+                case 'SLL':
+                    registers[instruction.args[0]] = no_flags(args[1] << args[2]);
+                    break;
+                case 'SRL':
+                    registers[instruction.args[0]] = no_flags(args[1] >> args[2]);
+                    break;	
                 case 'BCS':
                     if (registers['c'] === 1) {
                     instructionPointer += args[0];
@@ -474,27 +482,39 @@ NOP
                         instructionPointer++;
                         }
                     break;
-		case 'BGU': // Laura Sofía Ramirez Laiton
-   		 if (registers['c'] === 0 && registers['z'] === 0) {
-    		    instructionPointer += args[0]; // Salta si C = 0 y Z = 0
-   		 } else {
-  		      instructionPointer++;
-   		 }
-  		  break;
-		case 'BCC': // Damyan Leonardo Leon Gaona
- 		   if (registers['c'] === 0) {
-   		     instructionPointer += args[0]; // Salta si C = 0
-  		  } else {
-  		      instructionPointer++;
-  		  }
- 		   break;
-		case 'BPOS': // Helder Andrés Rodríguez Rosero
-		    if (registers['n'] === 0) {
-		        instructionPointer += args[0]; // Salta si N = 0, lo que significa que el número es positivo
-		    } else {
-		        instructionPointer++;
-		    }
-		    break;
+                case 'BGU': // Laura Sofía Ramirez Laiton
+                   if (registers['c'] === 0 && registers['z'] === 0) {
+                        instructionPointer += args[0]; // Salta si C = 0 y Z = 0
+                   } else {
+                        instructionPointer++;
+                   }
+                    break;
+                case 'BCC': // Damyan Leonardo Leon Gaona
+                   if (registers['c'] === 0) {
+                       instructionPointer += args[0]; // Salta si C = 0
+                    } else {
+                        instructionPointer++;
+                    }
+                   break;
+                case 'BPOS': // Helder Andrés Rodríguez Rosero
+                    if (registers['n'] === 0) {
+                        instructionPointer += args[0]; // Salta si N = 0, lo que significa que el número es positivo
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
+                case 'BNEG':
+                    if (registers['n'] === 1) { 
+                        instructionPointer += args[0]; // Realiza un salto relativo si N es 1
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
+                case 'BGE':
+                    if (registers['FLAG'] >= 0) {
+                        return args[0];
+                    }
+                    break;
                 case 'SETHI':
                     registers[instruction.args[0]] = args[1] << 10;
                     break;
@@ -516,6 +536,11 @@ NOP
                     break;
                 case 'BA':
                     return args[0];
+                    break;
+                case 'BVC':
+                    if (registers['v'] === 0) { // Si la bandera 'v' está limpia
+                    instructionPointer += args[0]; // Salta a la dirección relativa
+                    }
                     break;
                 case 'NOP':
                     break;
@@ -582,7 +607,7 @@ NOP
                 const memoryInput = document.getElementById('memoryInput').value;
                 for (let i = 100; i < 116; i=i+4) {
                     memory[i] = i+1000;
-                   }
+                }
                 //memory = memoryInput.split(',').map(Number); // Initialize memory from textarea
             }
 
