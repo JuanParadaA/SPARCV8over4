@@ -574,32 +574,6 @@ NOP
 
                 case 'NOP':
                     break;
-                case 'CALL':
-                    {
-                        // Guarda la dirección de retorno en %o7
-                        registers['o7'] = registers['PC'] + 4; // PC apunta a la instrucción siguiente
-                        // Calcula el salto relativo basado en cte30
-                        const cte30 = args[0]; // Valor del salto 
-                        registers['PC'] += cte30 * 4; // Salto: cte30 multiplicado por 4
-                        // Sincroniza instructionPointer con el nuevo PC
-                        instructionPointer = registers['PC'] / 4;
-                    }
-                    break;                
-                case 'RETL':
-                    {
-                        // Recupera la dirección de retorno desde %o7
-                        const returnAddress = registers['o7'] + 8; // Dirección de retorno ajustada
-                        // Sincroniza PC e instructionPointer
-                        registers['PC'] = returnAddress;
-                        instructionPointer = Math.floor(returnAddress / 4);
-                    }
-                    break;
-                case 'JMPL':
-                    // Suma los valores de los registros rs1 y rs2 para calcular la dirección de salto
-                    registers[instruction.args[0]] = registers[instruction.args[1]] + registers[instruction.args[2]]; // Salto a la dirección calculada
-                    // Actualiza el registro rd con la dirección de retorno (PC)
-                    registers[instruction.args[0]] = registers['PC']; // Almacena la dirección de retorno
-                    break;
                 case 'malloc': //malloc Rd,  Cte
                         // malloc: Allocates a block of memory on the heap at runtime.
                         // Rd: Register that stores the address of the beginning of the allocated block.
