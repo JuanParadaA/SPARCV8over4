@@ -192,7 +192,9 @@ NOP
         <div id="simulationOutput">
             <pre id="output"></pre>
         </div>
-    
+        <div class="flags-container">
+            <p id="o7">o7 : </p>
+        </div>
         <!-- Flags como fila -->
         <div class="flags-container">
             <span class="flag" id="flagC">C: 0</span>
@@ -250,8 +252,8 @@ NOP
             "malloc", "backend",
         ];
 
-        const registers = {};
-        for (let i = 0; i <= 12; i++) {
+        const registers = {o7:null};
+        for (let i = 0; i <= 15; i++) {
             registers[`R${i}`] = 0;
         }
         let memory = registers;
@@ -308,7 +310,7 @@ NOP
         }
 
 
-       function sendJson(jsonData) {
+        function sendJson(jsonData) {
             btn_step.style.color = "black"
             btn_step.textContent  = "Wait";
             //btn_step.onclick = "";
@@ -328,7 +330,7 @@ NOP
                         console.log(`Key: ${key}, Value: ${value}`);
                         memory[key]=parseInt(value)
                     }
-                 })
+                })
                 .catch(error => console.error('sendJson Error:', error));
         }
         
@@ -413,26 +415,32 @@ NOP
                     return parseInt(arg, 10);
                 }
             });
+            let pcIncrement = 1;
 
             switch (instruction.op) {
                 case 'MOV':
                     registers[instruction.args[0]] = args[1];
                     break;
                 case 'LD':
-                    //registers[instruction.args[0]] = read_memory(args[1]);
                     read_memory(args[1],instruction.args[0]);
+                    break;
+                case 'AND':
+                    registers[instruction.args[0]]= no_flags(registers[instruction.args[1]] & registers[instruction.args[2]]);
                     break;
                 case 'OR':
                     registers[instruction.args[0]] = args[1] | args[2];
+                    break;
+                case 'ANDN':
+                    registers[instruction.args[0]] = no_flags(registers[instruction.args[1]] & ~registers[instruction.args[2]]);
                     break;
                 case 'ORN':
                     registers[instruction.args[0]] = registers[instruction.args[1]] | (~args[2]);
                     break;
                 case 'XOR':
-                    registers[instruction.args[0]] = args[1] ^ args[2];
+                    registers[instruction.args[0]] = no_flags(args[1] ^ args[2]);
                     break;
                 case 'XNOR':
-                    registers[instruction.args[0]] = ~(args[1] ^ args[2]);
+                    registers[instruction.args[0]] = no_flags(~(args[1] ^ args[2]));
                     break;
                 case 'ST':
                     write_memory(args[0], args[1]);
@@ -461,8 +469,60 @@ NOP
                 case 'DEC':
                     registers[instruction.args[0]] -= 1;
                     break;
+                case 'BLEU':
+                    if (registers['c'] || registers['z']) {
+                        return args[0];
+                    }
+                    break;
+                case 'SRA':
+                    registers[instruction.args[0]] = flags(args[1]/(2*args[2]));
+                    break;
+
                 case 'SLL':
-                    registers[instruction.args[0]] = args[1] << args[2];
+                    registers[instruction.args[0]] = no_flags(args[1] << args[2]);
+                    break;
+                case 'SRL':
+                    registers[instruction.args[0]] = no_flags(args[1] >> args[2]);
+                    break;	
+                case 'BCS':
+                    if (registers['c'] === 1) {
+                    instructionPointer += args[0];
+                        } else {
+                        instructionPointer++;
+                        }
+                    break;
+                case 'BGU': // Laura Sofía Ramirez Laiton
+                    if (registers['c'] === 0 && registers['z'] === 0) {
+                        instructionPointer += args[0]; // Salta si C = 0 y Z = 0
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
+                case 'BCC': // Damyan Leonardo Leon Gaona
+                    if (registers['c'] === 0) {
+                       instructionPointer += args[0]; // Salta si C = 0
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
+                case 'BPOS': // Helder Andrés Rodríguez Rosero
+                    if (registers['n'] === 0) {
+                        instructionPointer += args[0]; // Salta si N = 0, lo que significa que el número es positivo
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
+                case 'BNEG':
+                    if (registers['n'] === 1) { 
+                        instructionPointer += args[0]; // Realiza un salto relativo si N es 1
+                    } else {
+                        instructionPointer++;
+                    }
+                    break;
+                case 'BGE':
+                    if (registers['FLAG'] >= 0) {
+                        return args[0];
+                    }
                     break;
                 case 'SETHI':
                     registers[instruction.args[0]] = args[1] << 10;
@@ -486,6 +546,40 @@ NOP
                 case 'BA':
                     return args[0];
                     break;
+                case 'BVC':
+                    if (registers['v'] === 0) { // Si la bandera 'v' está limpia
+                    instructionPointer += args[0]; // Salta a la dirección relativa
+                    }
+                    break;
+
+                case 'BNE':
+                    if (registers['z'] !== 1) {
+                        return args[0]; 
+                    }
+                    break;
+                case 'BVS':
+                    if (registers['v'] === 1) {
+                        return args[0]; 
+                    }
+                    break;
+                case 'BE': // Brinca si son iguales
+                    if (registers['Z'] === 1) {
+                        pcIncrement = args[0]; // Salto relativo
+                    }
+                    break;
+
+                case 'BLE': // Brinca si es menor o igual
+                    if (registers['Z'] === 1 || (registers['N'] ^ registers['V']) === 1) {
+                        pcIncrement = args[0]; // Salto relativo
+                    }
+                    break;
+
+                case 'BL': // Brinca si es menor
+                    if ((registers['N'] ^ registers['V']) === 1) {
+                        pcIncrement = args[0]; // Salto relativo
+                    }
+                    break;
+
                 case 'NOP':
                     break;
                 case 'malloc': //malloc Rd,  Cte
@@ -500,6 +594,9 @@ NOP
                     sw_back.checked=Boolean(args[0])
                     console.log('backend',sw_back.checked)
                     break;
+
+                
+        
                 default:
                     console.log(`Unknown instruction: ${instruction.op}`);
             }
@@ -539,7 +636,7 @@ NOP
                 const memoryInput = document.getElementById('memoryInput').value;
                 for (let i = 100; i < 116; i=i+4) {
                     memory[i] = i+1000;
-                   }
+                }
                 //memory = memoryInput.split(',').map(Number); // Initialize memory from textarea
             }
 
@@ -564,6 +661,7 @@ NOP
 
         function updateRegisterTable() {
             const table = document.getElementById('registerTable');
+            document.getElementById("o7").textContent = "%o7:" +registers.o7;
             table.innerHTML = '';
             for (const [reg, value] of Object.entries(registers)) {
 				let signedValue=value>=2**31?value-2**32:value;
@@ -587,7 +685,8 @@ NOP
         //console.log('updateMemoryTextarea',memory)
             document.getElementById('memoryInput').value = JSON.stringify(memory, null, 4);
         }
-//Powered by ChatGPT
         </script>
     </body>
+
 </html>
+
