@@ -555,15 +555,17 @@ NOP
                     }
                     break;
 
-                //Test
                 case 'CALL':
-                    const returnAddress = instructionPointer + 1;
-                    registers['RA'] = returnAddress;
+                    registers['RA'] = instructionPointer;
                     return args[0];
                     break;
                 case 'RETL':
-                    return registers['RA'] + 1 - instructionPointer
-                //
+                    return registers['RA'] + 2- instructionPointer
+                    break;
+                case 'JMPL':
+                    registers[instruction.args[0]] = instructionPointer;
+                    return args[0] + args[1] - instructionPointer
+                    break;
 
 
 
