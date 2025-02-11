@@ -462,22 +462,22 @@ NOP
                     }
                     break;
                 case 'BLEU':
-                    if (registers['c'] || registers['z']) {
+                    if (registers['C'] || registers['Z']) {
                          return args[0];
                     }
                     break;
                 case 'BCS':
-                    if (registers['c']) {
+                    if (registers['C']) {
                          return args[0];
                    }
                     break;
                 case 'BNEG':
-                    if (registers['n'] ,7) { 
+                    if (registers['N'] ,7) { 
                          return args[0];
                     }
                     break;
                 case 'BVS':
-                    if (registers['v'] ) {
+                    if (registers['V'] ) {
                         return args[0];
                     }
                     break;
@@ -485,7 +485,7 @@ NOP
                         return args[0];
                     break;
                 case 'BNE':
-                    if (~registers['z']) {
+                    if (~registers['Z']) {
                         return args[0];
                     }
                     break;
@@ -500,22 +500,22 @@ NOP
                    }
                     break;
                 case 'BGU': 
-                    if (~registers['c'] && ~registers['z']) {
+                    if (~registers['C'] && ~registers['Z']) {
                         return args[0];
                    }
                     break;
                 case 'BCC':
-                    if (~registers['c']) {
+                    if (~registers['C']) {
                         return args[0];
                     }
                     break;
                 case 'BPOS':
-                    if (~registers['n']) {
+                    if (~registers['N']) {
                         return args[0];
                     }
                     break;
                 case 'BVC':
-                    if (~registers['v']) { // Si la bandera 'v' está limpia
+                    if (~registers['V']) { // Si la bandera 'v' está limpia
                         return args[0];
                     }
                     break;
@@ -597,11 +597,11 @@ NOP
 		}
 		function flags(resultado){// los numeros de registers['resultado'] van entre o y (2**32) -1, es obligacion de cada uno revisar que la operacion se cumple bien cuando los valores de los registros estan con signo
 				console.log("resultdo  flag in", resultado)
-				registers['c'] = (resultado >= 2**32) || (resultado < 0);
-				registers['v'] = (resultado >= 2**31) || (resultado < -(2**31));
+				registers['C'] = (resultado >= 2**32) || (resultado < 0);
+				registers['V'] = (resultado >= 2**31) || (resultado < -(2**31));
 				resultado=no_flags(resultado);
-				registers['n'] = resultado >= 2**31;
-				registers['z'] = resultado == 0;
+				registers['N'] = resultado >= 2**31;
+				registers['Z'] = resultado == 0;
 				updateRegisters(registers);
 				console.log("resultdo flag out", resultado)
 				return resultado;
