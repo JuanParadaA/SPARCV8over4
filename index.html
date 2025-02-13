@@ -422,8 +422,11 @@ NOP
                 case 'XOR':
                     registers[instruction.args[0]] = no_flags(args[1] ^ args[2]);
                     break;
+                case 'NEG':
+                    registers[instruction.args[0]] = no_flags(0 - args[1]);
+                    break;
                 case 'SUB':
-                registers[instruction.args[0]] = no_flags(args[1] - args[2]);
+                    registers[instruction.args[0]] = no_flags(args[1] - args[2]);
                     break;
                 case 'SUBcc':
                     registers[instruction.args[0]] = flags(args[1] - args[2]);
