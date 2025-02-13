@@ -533,7 +533,7 @@ NOP
                     write_memory(args[0], args[1]);
                     break;
                 case 'SDIV':
-                    registers[instruction.args[0]] = no_flags(Math.floor(args[1] / args[2]));
+                    registers[instruction.args[0]] = no_flags(Math.floor((args[1]  >> 0)/ (args[2] >> 0)));
                     break;
                 case 'SMUL':
                     registers[instruction.args[0]] = no_flags(args[1] * args[2]);
